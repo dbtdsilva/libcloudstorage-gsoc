@@ -127,7 +127,7 @@ int httpRequestCallback(void* cls, MHD_Connection* connection, const char* url,
 }
 }  // namespace
 
-Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_() {}
+Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_() {}
 
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
