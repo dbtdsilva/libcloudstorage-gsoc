@@ -45,7 +45,7 @@ class IAuth {
 
   virtual ~IAuth() = default;
 
-  virtual void initialize(IHttp*) = 0;
+  virtual void initialize(IHttp*, IHttpd*) = 0;
   virtual IHttp* http() const = 0;
 
   virtual const std::string& authorization_code() const = 0;

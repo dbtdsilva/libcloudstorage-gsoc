@@ -129,7 +129,7 @@ int httpRequestCallback(void* cls, MHD_Connection* connection, const char* url,
 
 Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_() {}
 
-void Auth::initialize(IHttp* http) { http_ = http; }
+void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
 const std::string& Auth::authorization_code() const {
   return authorization_code_;

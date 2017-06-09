@@ -34,7 +34,7 @@ class Auth : public IAuth {
 
   Auth();
 
-  void initialize(IHttp*) override;
+  void initialize(IHttp*, IHttpd*) override;
 
   const std::string& authorization_code() const override;
   void set_authorization_code(const std::string&) override;
@@ -73,6 +73,7 @@ class Auth : public IAuth {
   uint16_t redirect_uri_port_;
   Token::Pointer access_token_;
   IHttp* http_;
+  IHttpd* httpd_;
 };
 
 }  // namespace cloudstorage

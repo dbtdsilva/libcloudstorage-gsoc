@@ -143,7 +143,7 @@ namespace cloudstorage {
 
 CloudProvider::CloudProvider(IAuth::Pointer auth)
     : auth_(std::move(auth)),
-      http_(),
+      http_(), httpd_(),
       current_authorization_status_(AuthorizationStatus::None) {}
 
 void CloudProvider::initialize(InitData&& data) {
@@ -151,6 +151,7 @@ void CloudProvider::initialize(InitData&& data) {
   callback_ = std::move(data.callback_);
   crypto_ = std::move(data.crypto_engine_);
   http_ = std::move(data.http_engine_);
+  httpd_ = std::move(data.httpd_engine_);
   thumbnailer_ = std::move(data.thumbnailer_);
 
   auto t = auth()->fromTokenString(data.token_);
@@ -179,7 +180,7 @@ void CloudProvider::initialize(InitData&& data) {
 #endif
 
   if (!http_) throw std::runtime_error("No http module specified.");
-  auth()->initialize(http());
+  auth()->initialize(http(), httpd());
 }
 
 ICloudProvider::Hints CloudProvider::hints() const {
@@ -215,6 +216,8 @@ ICloudProvider::ICallback* CloudProvider::callback() const {
 ICrypto* CloudProvider::crypto() const { return crypto_.get(); }
 
 IHttp* CloudProvider::http() const { return http_.get(); }
+
+IHttpd* CloudProvider::httpd() const { return httpd_.get(); }
 
 IThumbnailer* CloudProvider::thumbnailer() const { return thumbnailer_.get(); }
 

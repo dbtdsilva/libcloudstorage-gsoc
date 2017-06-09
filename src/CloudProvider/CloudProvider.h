@@ -55,6 +55,7 @@ class CloudProvider : public ICloudProvider,
   ICallback* callback() const;
   ICrypto* crypto() const;
   IHttp* http() const;
+  IHttpd* httpd() const;
   IThumbnailer* thumbnailer() const;
 
   virtual AuthorizeRequest::Pointer authorizeAsync();
@@ -264,6 +265,7 @@ class CloudProvider : public ICloudProvider,
   ICloudProvider::ICallback::Pointer callback_;
   ICrypto::Pointer crypto_;
   IHttp::Pointer http_;
+  IHttpd::Pointer httpd_;
   IThumbnailer::Pointer thumbnailer_;
   AuthorizeRequest::Pointer current_authorization_;
   AuthorizationStatus current_authorization_status_;
