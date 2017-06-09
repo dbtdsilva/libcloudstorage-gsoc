@@ -75,6 +75,7 @@ libcloudstorage_la_HEADERS = \
 	IRequest.h \
 	ICrypto.h \
 	IHttp.h \
+	IHttpd.h \
 	IThumbnailer.h
 
 libcloudstorage_la_LIBADD = \

@@ -31,6 +31,7 @@
 
 #include "ICrypto.h"
 #include "IHttp.h"
+#include "IHttpd.h"
 #include "IItem.h"
 #include "IRequest.h"
 #include "IThumbnailer.h"
@@ -113,6 +114,12 @@ class ICloudProvider {
      * Provides methods which are used for http communication.
      */
     IHttp::Pointer http_engine_;
+    
+    /**
+     * Provides methods which are used for httpd communication, those methods
+     * allow to create a HTTP server daemon.
+     */
+    IHttpd::Pointer httpd_engine_;
 
     /**
      * Provides thumbnails when cloud provider doesn't have its own.
