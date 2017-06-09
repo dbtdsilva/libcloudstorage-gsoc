@@ -53,6 +53,10 @@
 #include "Utility/FFmpegThumbnailer.h"
 #endif
 
+#ifdef WITH_MICROHTTPD
+#include "Utility/MicroHttpd.h"
+#endif
+
 using namespace std::placeholders;
 
 namespace {
@@ -178,8 +182,13 @@ void CloudProvider::initialize(InitData&& data) {
 #ifdef WITH_THUMBNAILER
   if (!thumbnailer_) thumbnailer_ = util::make_unique<FFmpegThumbnailer>();
 #endif
+  
+#ifdef WITH_MICROHTTPD
+  if (!httpd_) httpd_ = util::make_unique<MicroHttpd>();
+#endif
 
   if (!http_) throw std::runtime_error("No http module specified.");
+  if (!httpd_) throw std::runtime_error("No httpd module specified.");
   auth()->initialize(http(), httpd());
 }
 
