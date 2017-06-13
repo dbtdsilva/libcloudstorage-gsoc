@@ -24,7 +24,6 @@
 #include "Auth.h"
 
 #include <json/json.h>
-#include <microhttpd.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -170,13 +169,9 @@ std::string Auth::awaitAuthorizationCode(
                          http_server_port,
                          HttpServerData::Awaiting,
                          &semaphore};
-  //  MHD_Daemon* http_server =
-  //      MHD_start_daemon(MHD_USE_POLL_INTERNALLY, http_server_port, NULL, NULL,
-  //                       &httpRequestCallback, &data, MHD_OPTION_END);
   httpd_->startServer(http_server_port, requestCallback, &data);
   if (server_started) server_started();
   semaphore.wait();
-  //  MHD_stop_daemon(http_server);
   httpd_->stopServer();
   if (server_stopped) server_stopped();
   if (data.state_ == HttpServerData::Accepted)
