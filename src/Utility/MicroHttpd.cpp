@@ -24,26 +24,43 @@
 #include "MicroHttpd.h"
 
 namespace cloudstorage {
-
-int MicroHttpd::MHDRequestCallback(void* cls, MHD_Connection* connection, const char* url,
-                        const char* /*method*/, const char* /*version*/,
-                        const char* /*upload_data*/,
-                        size_t* /*upload_data_size*/, void** /*ptr*/) 
+namespace {
+int iterateOverConnectionValues(void *cls, enum MHD_ValueKind kind, 
+        const char *key, const char *value) {
+    //fprintf(stderr, "Key: %s, Value: %s\n", key, value);
+    IHttpd::ConnectionValues *data = static_cast<IHttpd::ConnectionValues*>(cls);
+    if (data->find(key) == data->end()) {
+        data->insert( std::make_pair(key, value));
+        return MHD_YES; // Keep iterating
+    }
+    return MHD_NO;  // Stop iterating
+}
+}
+    
+int MicroHttpd::MHDRequestCallback(void* cls, MHD_Connection* connection, 
+        const char* url, const char* /*method*/, const char* /*version*/,
+        const char* /*upload_data*/, size_t* /*upload_size*/, void** /*ptr*/) 
 {
     CallbackData* data = static_cast<CallbackData*>(cls);
     
     RequestData request_data;
-    request_data.self = data->self;
+    request_data.obj = data->obj;
     request_data.url.assign(url);
     request_data.custom_data = data->custom_data;
     request_data.connection = connection;
-    return data->request_callback(&request_data);
+    
+    MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, 
+            &iterateOverConnectionValues, &(request_data.args));
+    MHD_get_connection_values(connection, MHD_HEADER_KIND, 
+            &iterateOverConnectionValues, &(request_data.headers));
+    
+    return data->request_callback(&request_data) >= 0 ? MHD_YES : MHD_NO;
 }
 
 void MicroHttpd::startServer(uint16_t port, 
-        std::function<int(RequestData*)> request_callback, void* data)
+        CallbackFunction request_callback, void* data)
 {
-    callback_data.self = this;
+    callback_data.obj = this;
     callback_data.request_callback = request_callback;
     callback_data.custom_data = data;
     http_server = MHD_start_daemon(MHD_USE_POLL_INTERNALLY, port, NULL, NULL, 
@@ -55,9 +72,11 @@ void MicroHttpd::stopServer()
     MHD_stop_daemon(http_server);
 }
 
-std::string MicroHttpd::getArgument(RequestData* data, const std::string& arg_name)
+std::string MicroHttpd::getArgument(RequestData* data, 
+        const std::string& arg_name)
 {
-    const char * value = MHD_lookup_connection_value((MHD_Connection*) data->connection, 
+    const char * value = MHD_lookup_connection_value(
+            (MHD_Connection*) data->connection,
             MHD_GET_ARGUMENT_KIND, arg_name.c_str());
     return value ? std::string(value) : "";
 }
@@ -66,11 +85,11 @@ int MicroHttpd::sendResponse(RequestData* data, const std::string& response)
 {
     MHD_Response* mdh_response = MHD_create_response_from_buffer(
       response.length(), (void*)response.c_str(), MHD_RESPMEM_MUST_COPY);
-    int ret = MHD_queue_response((MHD_Connection*) data->connection, 
+    int status = MHD_queue_response((MHD_Connection*) data->connection, 
             MHD_HTTP_OK, mdh_response);
     MHD_destroy_response(mdh_response);
     
-    return ret;
+    return status == MHD_YES ? 0 : -1;
 }
 
 }  // namespace cloudstorage

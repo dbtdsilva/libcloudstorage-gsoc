@@ -88,7 +88,7 @@ int requestCallback(IHttpd::RequestData * rdata) {
 
     if (rdata->url == "/login") page += LOGIN_PAGE;
 
-    std::string code = rdata->self->getArgument(rdata, data->code_parameter_name_);
+    std::string code = rdata->obj->getArgument(rdata, data->code_parameter_name_);
     if (!code.empty()) {
         data->code_ = code;
         Json::Value json;
@@ -96,16 +96,16 @@ int requestCallback(IHttpd::RequestData * rdata) {
         page += "<body>Success.</body>" + sendHttpRequestFromJavaScript(json);
     }
 
-    std::string error = rdata->self->getArgument(rdata, data->error_parameter_name_);
+    std::string error = rdata->obj->getArgument(rdata, data->error_parameter_name_);
     if (!error.empty()) {
         Json::Value json;
         json["data"]["accepted"] = "false";
         page += "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
     }
 
-    int response = rdata->self->sendResponse(rdata, page);
+    int response = rdata->obj->sendResponse(rdata, page);
     
-    std::string accepted = rdata->self->getArgument(rdata, "accepted");
+    std::string accepted = rdata->obj->getArgument(rdata, "accepted");
     if (!accepted.empty()) {
         if (accepted == "true") {
             data->state_ = HttpServerData::Accepted;
@@ -162,7 +162,6 @@ std::string Auth::awaitAuthorizationCode(
     std::string code_parameter_name, std::string error_parameter_name,
     std::function<void()> server_started,
     std::function<void()> server_stopped) const {
-  std::cout << "cloudstorage: awaitAuthorizationCode: " << std::endl;
   uint16_t http_server_port = redirect_uri_port();
   Semaphore semaphore;
   HttpServerData data = {"",
@@ -171,15 +170,13 @@ std::string Auth::awaitAuthorizationCode(
                          http_server_port,
                          HttpServerData::Awaiting,
                          &semaphore};
-//  MHD_Daemon* http_server =
-//      MHD_start_daemon(MHD_USE_POLL_INTERNALLY, http_server_port, NULL, NULL,
-//                       &httpRequestCallback, &data, MHD_OPTION_END);
+  //  MHD_Daemon* http_server =
+  //      MHD_start_daemon(MHD_USE_POLL_INTERNALLY, http_server_port, NULL, NULL,
+  //                       &httpRequestCallback, &data, MHD_OPTION_END);
   httpd_->startServer(http_server_port, requestCallback, &data);
-  std::cout << "cloudstorage: server started" << std::endl;
   if (server_started) server_started();
   semaphore.wait();
-  std::cout << "cloudstorage: stopdaemon" << std::endl;
-//  MHD_stop_daemon(http_server);
+  //  MHD_stop_daemon(http_server);
   httpd_->stopServer();
   if (server_stopped) server_stopped();
   if (data.state_ == HttpServerData::Accepted)

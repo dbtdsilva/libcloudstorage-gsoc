@@ -31,8 +31,7 @@ namespace cloudstorage {
 
 class MicroHttpd : public IHttpd {
 public:
-    void startServer(uint16_t port, 
-        std::function<int(RequestData*)> request_callback, void* data) override;
+    void startServer(uint16_t port, CallbackFunction request_callback, void* data) override;
     void stopServer() override;
     
     virtual std::string getArgument(RequestData*, const std::string& arg_name) override;

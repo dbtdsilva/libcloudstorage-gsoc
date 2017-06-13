@@ -30,33 +30,68 @@
 #include <string>
 
 namespace cloudstorage {
-
+    
 class IHttpd {
 public:
     using Pointer = std::unique_ptr<IHttpd>;
+    // Public structure definitions
+    typedef std::map<std::string, std::string> ConnectionValues;
     struct RequestData {        
-        IHttpd* self;
+        IHttpd* obj;
         std::string url;
-        std::map<std::string, std::string> args;
-        std::map<std::string, std::string> headers;
+        ConnectionValues args;
+        ConnectionValues headers;
         void *connection;
         void *custom_data;
     };
+    typedef std::function<int(IHttpd::RequestData*)> CallbackFunction;
     
+    // Public functions
+    /**
+     * Initiates a HTTPD server with the given values and each request will
+     * be redirected to the callback.
+     *
+     * @param port integer value containing the server port
+     * @param request_callback callback that receives every request
+     * @param data callback parameters
+     */
     virtual void startServer(uint16_t port, 
-        std::function<int(RequestData*)> request_callback, void* data) = 0;
+        CallbackFunction request_callback, void* data) = 0;
+    
+    /**
+     * This functions allows to stop an already started daemon.
+     */
     virtual void stopServer() = 0;
     
-    virtual std::string getArgument(RequestData*, const std::string& arg_name) = 0;
-    virtual int sendResponse(RequestData*, const std::string& response) = 0;
+    /**
+     * Initiates a HTTPD server with the given values and each request will
+     * be redirected to the callback.
+     *
+     * @param data This value should be passed from the requests callback
+     * @param arg_name The argument being searched
+     * @return Returns the value of the argument or empty if not found
+     */
+    virtual std::string getArgument(RequestData* data, const std::string& arg_name) = 0;
+    
+    /**
+     * This functions allows to send a response for a given request
+     *
+     * @param data This value should be passed from the requests callback
+     * @param response Contains the HTML code for the response
+     * @return Returns 0 if response was successfully and negative values when
+     *  an error has occured.
+     */
+    virtual int sendResponse(RequestData* data, const std::string& response) = 0;
     
 protected:
     struct CallbackData {        
-        IHttpd* self;
-        std::function<int(RequestData*)> request_callback;
+        IHttpd* obj;
+        CallbackFunction request_callback;
         void* custom_data;
     } callback_data;
 };
+
+
 
 } // namespace cloudstorage
 
