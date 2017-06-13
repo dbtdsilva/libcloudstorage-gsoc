@@ -27,6 +27,7 @@
 #include <microhttpd.h>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 #include "Utility.h"
 
@@ -81,50 +82,40 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
   return stream.str();
 }
 
-int httpRequestCallback(void* cls, MHD_Connection* connection, const char* url,
-                        const char* /*method*/, const char* /*version*/,
-                        const char* /*upload_data*/,
-                        size_t* /*upload_data_size*/, void** /*ptr*/) {
-  HttpServerData* data = static_cast<HttpServerData*>(cls);
-  std::string page = JQUERY;
+int requestCallback(IHttpd::RequestData * rdata) {
+    HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
+    std::string page = JQUERY;
 
-  if (std::string(url) == "/login") page += LOGIN_PAGE;
+    if (rdata->url == "/login") page += LOGIN_PAGE;
 
-  const char* code = MHD_lookup_connection_value(
-      connection, MHD_GET_ARGUMENT_KIND, data->code_parameter_name_.c_str());
-  if (code) {
-    data->code_ = code;
-    Json::Value json;
-    json["data"]["accepted"] = "true";
-    page += "<body>Success.</body>" + sendHttpRequestFromJavaScript(json);
-  }
+    std::string code = rdata->self->getArgument(rdata, data->code_parameter_name_);
+    if (!code.empty()) {
+        data->code_ = code;
+        Json::Value json;
+        json["data"]["accepted"] = "true";
+        page += "<body>Success.</body>" + sendHttpRequestFromJavaScript(json);
+    }
 
-  const char* error = MHD_lookup_connection_value(
-      connection, MHD_GET_ARGUMENT_KIND, data->error_parameter_name_.c_str());
-  if (error) {
-    Json::Value json;
-    json["data"]["accepted"] = "false";
-    page +=
-        "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
-  }
+    std::string error = rdata->self->getArgument(rdata, data->error_parameter_name_);
+    if (!error.empty()) {
+        Json::Value json;
+        json["data"]["accepted"] = "false";
+        page += "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
+    }
 
-  const char* accepted = MHD_lookup_connection_value(
-      connection, MHD_GET_ARGUMENT_KIND, "accepted");
-  if (accepted) {
-    if (std::string(accepted) == "true") {
-      data->state_ = HttpServerData::Accepted;
-    } else
-      data->state_ = HttpServerData::Denied;
-    data->semaphore_->notify();
-  }
-
-  MHD_Response* response = MHD_create_response_from_buffer(
-      page.length(), (void*)page.c_str(), MHD_RESPMEM_MUST_COPY);
-  int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-  MHD_destroy_response(response);
-
-  return ret;
+    int response = rdata->self->sendResponse(rdata, page);
+    
+    std::string accepted = rdata->self->getArgument(rdata, "accepted");
+    if (!accepted.empty()) {
+        if (accepted == "true") {
+            data->state_ = HttpServerData::Accepted;
+        } else
+            data->state_ = HttpServerData::Denied;
+        data->semaphore_->notify();
+    }
+    return response;
 }
+
 }  // namespace
 
 Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_() {}
@@ -171,6 +162,7 @@ std::string Auth::awaitAuthorizationCode(
     std::string code_parameter_name, std::string error_parameter_name,
     std::function<void()> server_started,
     std::function<void()> server_stopped) const {
+  std::cout << "cloudstorage: awaitAuthorizationCode: " << std::endl;
   uint16_t http_server_port = redirect_uri_port();
   Semaphore semaphore;
   HttpServerData data = {"",
@@ -179,12 +171,16 @@ std::string Auth::awaitAuthorizationCode(
                          http_server_port,
                          HttpServerData::Awaiting,
                          &semaphore};
-  MHD_Daemon* http_server =
-      MHD_start_daemon(MHD_USE_POLL_INTERNALLY, http_server_port, NULL, NULL,
-                       &httpRequestCallback, &data, MHD_OPTION_END);
+//  MHD_Daemon* http_server =
+//      MHD_start_daemon(MHD_USE_POLL_INTERNALLY, http_server_port, NULL, NULL,
+//                       &httpRequestCallback, &data, MHD_OPTION_END);
+  httpd_->startServer(http_server_port, requestCallback, &data);
+  std::cout << "cloudstorage: server started" << std::endl;
   if (server_started) server_started();
   semaphore.wait();
-  MHD_stop_daemon(http_server);
+  std::cout << "cloudstorage: stopdaemon" << std::endl;
+//  MHD_stop_daemon(http_server);
+  httpd_->stopServer();
   if (server_stopped) server_stopped();
   if (data.state_ == HttpServerData::Accepted)
     return data.code_;

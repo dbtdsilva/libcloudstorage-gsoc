@@ -34,21 +34,28 @@ namespace cloudstorage {
 class IHttpd {
 public:
     using Pointer = std::unique_ptr<IHttpd>;
-    struct RequestData {
-        using Pointer = std::unique_ptr<RequestData>;
-        
+    struct RequestData {        
+        IHttpd* self;
         std::string url;
         std::map<std::string, std::string> args;
         std::map<std::string, std::string> headers;
+        void *connection;
+        void *custom_data;
     };
     
-    virtual void startServer(
-        uint16_t port, 
-        std::function<void(RequestData::Pointer, void*)> request_callback,
-        void* data) = 0;
+    virtual void startServer(uint16_t port, 
+        std::function<int(RequestData*)> request_callback, void* data) = 0;
     virtual void stopServer() = 0;
-    virtual std::string getArgument(const std::string& arg_name) const = 0;
-    virtual void sendResponse(const std::string& response) = 0;
+    
+    virtual std::string getArgument(RequestData*, const std::string& arg_name) = 0;
+    virtual int sendResponse(RequestData*, const std::string& response) = 0;
+    
+protected:
+    struct CallbackData {        
+        IHttpd* self;
+        std::function<int(RequestData*)> request_callback;
+        void* custom_data;
+    } callback_data;
 };
 
 } // namespace cloudstorage
