@@ -35,6 +35,7 @@ public:
     void stopServer() override;
     
     virtual std::string getArgument(RequestData*, const std::string& arg_name) override;
+    virtual std::string getHeader(RequestData*, const std::string& header_name) override;
     virtual int sendResponse(RequestData*, const std::string& response) override;
 private:
     static int MHDRequestCallback(void*, MHD_Connection*, const char*, 

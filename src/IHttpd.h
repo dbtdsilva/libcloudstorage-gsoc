@@ -64,14 +64,22 @@ public:
     virtual void stopServer() = 0;
     
     /**
-     * Initiates a HTTPD server with the given values and each request will
-     * be redirected to the callback.
+     * Searches for a specific argument in the given request.
      *
      * @param data This value should be passed from the requests callback
      * @param arg_name The argument being searched
      * @return Returns the value of the argument or empty if not found
      */
     virtual std::string getArgument(RequestData* data, const std::string& arg_name) = 0;
+    
+    /**
+     * Searches for a specific header in the given request.
+     *
+     * @param data This value should be passed from the requests callback
+     * @param header_name The header name being searched
+     * @return Returns the value of the header or empty if not found
+     */
+    virtual std::string getHeader(RequestData* data, const std::string& header_name) = 0;
     
     /**
      * This functions allows to send a response for a given request

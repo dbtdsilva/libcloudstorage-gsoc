@@ -79,6 +79,13 @@ std::string MicroHttpd::getArgument(RequestData* data,
     return it == data->args.end() ? "" : it->second;
 }
 
+std::string MicroHttpd::getHeader(RequestData* data, 
+        const std::string& header_name)
+{
+    auto it = data->headers.find(header_name);
+    return it == data->headers.end() ? "" : it->second;
+}
+
 int MicroHttpd::sendResponse(RequestData* data, const std::string& response) 
 {
     MHD_Response* mdh_response = MHD_create_response_from_buffer(
