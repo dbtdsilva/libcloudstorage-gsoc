@@ -25,19 +25,32 @@
 #define IHTTPD_H
 
 #include <memory>
+#include <functional>
+#include <map>
+#include <string>
 
 namespace cloudstorage {
 
 class IHttpd {
 public:
     using Pointer = std::unique_ptr<IHttpd>;
-  
-    virtual void startServer(uint16_t port) = 0;
+    struct RequestData {
+        using Pointer = std::unique_ptr<RequestData>;
+        
+        std::string url;
+        std::map<std::string, std::string> args;
+        std::map<std::string, std::string> headers;
+    };
+    
+    virtual void startServer(
+        uint16_t port, 
+        std::function<void(RequestData::Pointer, void*)> request_callback,
+        void* data) = 0;
     virtual void stopServer() = 0;
-    virtual std::string& getArgument(const std::string& arg_name) const = 0;
+    virtual std::string getArgument(const std::string& arg_name) const = 0;
     virtual void sendResponse(const std::string& response) = 0;
 };
 
-}  // namespace cloudstorage
+} // namespace cloudstorage
 
 #endif  // IHTTPD_H
