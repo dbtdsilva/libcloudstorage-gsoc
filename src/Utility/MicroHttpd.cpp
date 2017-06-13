@@ -75,10 +75,8 @@ void MicroHttpd::stopServer()
 std::string MicroHttpd::getArgument(RequestData* data, 
         const std::string& arg_name)
 {
-    const char * value = MHD_lookup_connection_value(
-            (MHD_Connection*) data->connection,
-            MHD_GET_ARGUMENT_KIND, arg_name.c_str());
-    return value ? std::string(value) : "";
+    auto it = data->args.find(arg_name);
+    return it == data->args.end() ? "" : it->second;
 }
 
 int MicroHttpd::sendResponse(RequestData* data, const std::string& response) 
