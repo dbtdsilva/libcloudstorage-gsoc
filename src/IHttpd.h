@@ -40,10 +40,9 @@ public:
         std::string url;
         ConnectionValues args;
         ConnectionValues headers;
-        void *internal_data;
         void *custom_data;
     };
-    typedef std::function<int(IHttpd::RequestData*)> CallbackFunction;
+    typedef std::function<std::string(IHttpd::RequestData*)> CallbackFunction;
     
     // Public functions
     /**
@@ -87,16 +86,6 @@ public:
         auto it = data->args.find(header_name);
         return it == data->args.end() ? "" : it->second;
     }
-    
-    /**
-     * This functions allows to send a response for a given request
-     *
-     * @param data This value should be passed from the requests callback
-     * @param response Contains the HTML code for the response
-     * @return Returns 0 if response was successfully and negative values when
-     *  an error has occured.
-     */
-    virtual int sendResponse(RequestData* data, const std::string& response) = 0;
 };
 
 

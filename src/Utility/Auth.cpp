@@ -81,7 +81,7 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
   return stream.str();
 }
 
-int requestCallback(IHttpd::RequestData * rdata) {
+std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     std::string page = JQUERY;
 
@@ -101,8 +101,6 @@ int requestCallback(IHttpd::RequestData * rdata) {
         json["data"]["accepted"] = "false";
         page += "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
     }
-
-    //int response = rdata->obj->sendResponse(rdata, page);
     
     std::string accepted = IHttpd::getArgument(rdata, "accepted");
     if (!accepted.empty()) {
@@ -112,7 +110,7 @@ int requestCallback(IHttpd::RequestData * rdata) {
             data->state_ = HttpServerData::Denied;
         data->semaphore_->notify();
     }
-    return 0;
+    return page;
 }
 
 }  // namespace

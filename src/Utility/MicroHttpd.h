@@ -31,17 +31,15 @@ namespace cloudstorage {
 
 class MicroHttpd : public IHttpd {
 public:
-    void startServer(uint16_t port, CallbackFunction request_callback, void* data) override;
+    void startServer(uint16_t port, CallbackFunction request_callback, 
+            void* data) override;
     void stopServer() override;
-    
-    virtual int sendResponse(RequestData*, const std::string& response) override;
 private:
     static int MHDRequestCallback(void*, MHD_Connection*, const char*, 
             const char*, const char*, const char*, size_t*, void**);
     MHD_Daemon* http_server;
     
-    struct CallbackData {        
-        IHttpd* obj;
+    struct CallbackData {
         CallbackFunction request_callback;
         void* custom_data;
     } callback_data;

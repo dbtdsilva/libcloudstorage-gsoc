@@ -46,20 +46,26 @@ int MicroHttpd::MHDRequestCallback(void* cls, MHD_Connection* connection,
     RequestData request_data;
     request_data.url.assign(url);
     request_data.custom_data = data->custom_data;
-    request_data.internal_data = connection;
     
     MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, 
             &iterateOverConnectionValues, &(request_data.args));
     MHD_get_connection_values(connection, MHD_HEADER_KIND, 
             &iterateOverConnectionValues, &(request_data.headers));
     
-    return data->request_callback(&request_data) >= 0 ? MHD_YES : MHD_NO;
+    std::string response_page = data->request_callback(&request_data);
+    
+    MHD_Response* mdh_response = MHD_create_response_from_buffer(
+            response_page.length(), (void*)response_page.c_str(), 
+            MHD_RESPMEM_MUST_COPY);
+    int status = MHD_queue_response((MHD_Connection*) connection, 
+            MHD_HTTP_OK, mdh_response);
+    MHD_destroy_response(mdh_response);
+    return status;
 }
 
 void MicroHttpd::startServer(uint16_t port, 
         CallbackFunction request_callback, void* data)
 {
-    callback_data.obj = this;
     callback_data.request_callback = request_callback;
     callback_data.custom_data = data;
     http_server = MHD_start_daemon(MHD_USE_POLL_INTERNALLY, port, NULL, NULL, 
@@ -69,17 +75,6 @@ void MicroHttpd::startServer(uint16_t port,
 void MicroHttpd::stopServer()
 {
     MHD_stop_daemon(http_server);
-}
-
-int MicroHttpd::sendResponse(RequestData* data, const std::string& response) 
-{
-    MHD_Response* mdh_response = MHD_create_response_from_buffer(
-      response.length(), (void*)response.c_str(), MHD_RESPMEM_MUST_COPY);
-    int status = MHD_queue_response((MHD_Connection*) data->internal_data, 
-            MHD_HTTP_OK, mdh_response);
-    MHD_destroy_response(mdh_response);
-    
-    return status == MHD_YES ? 0 : -1;
 }
 
 }  // namespace cloudstorage
