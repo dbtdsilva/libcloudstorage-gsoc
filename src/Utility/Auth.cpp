@@ -87,7 +87,7 @@ int requestCallback(IHttpd::RequestData * rdata) {
 
     if (rdata->url == "/login") page += LOGIN_PAGE;
 
-    std::string code = rdata->obj->getArgument(rdata, data->code_parameter_name_);
+    std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
     if (!code.empty()) {
         data->code_ = code;
         Json::Value json;
@@ -95,16 +95,16 @@ int requestCallback(IHttpd::RequestData * rdata) {
         page += "<body>Success.</body>" + sendHttpRequestFromJavaScript(json);
     }
 
-    std::string error = rdata->obj->getArgument(rdata, data->error_parameter_name_);
+    std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
     if (!error.empty()) {
         Json::Value json;
         json["data"]["accepted"] = "false";
         page += "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
     }
 
-    int response = rdata->obj->sendResponse(rdata, page);
+    //int response = rdata->obj->sendResponse(rdata, page);
     
-    std::string accepted = rdata->obj->getArgument(rdata, "accepted");
+    std::string accepted = IHttpd::getArgument(rdata, "accepted");
     if (!accepted.empty()) {
         if (accepted == "true") {
             data->state_ = HttpServerData::Accepted;
@@ -112,7 +112,7 @@ int requestCallback(IHttpd::RequestData * rdata) {
             data->state_ = HttpServerData::Denied;
         data->semaphore_->notify();
     }
-    return response;
+    return 0;
 }
 
 }  // namespace

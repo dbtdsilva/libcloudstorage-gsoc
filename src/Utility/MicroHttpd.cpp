@@ -44,10 +44,9 @@ int MicroHttpd::MHDRequestCallback(void* cls, MHD_Connection* connection,
     CallbackData* data = static_cast<CallbackData*>(cls);
     
     RequestData request_data;
-    request_data.obj = data->obj;
     request_data.url.assign(url);
     request_data.custom_data = data->custom_data;
-    request_data.connection = connection;
+    request_data.internal_data = connection;
     
     MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, 
             &iterateOverConnectionValues, &(request_data.args));
@@ -72,25 +71,11 @@ void MicroHttpd::stopServer()
     MHD_stop_daemon(http_server);
 }
 
-std::string MicroHttpd::getArgument(RequestData* data, 
-        const std::string& arg_name)
-{
-    auto it = data->args.find(arg_name);
-    return it == data->args.end() ? "" : it->second;
-}
-
-std::string MicroHttpd::getHeader(RequestData* data, 
-        const std::string& header_name)
-{
-    auto it = data->headers.find(header_name);
-    return it == data->headers.end() ? "" : it->second;
-}
-
 int MicroHttpd::sendResponse(RequestData* data, const std::string& response) 
 {
     MHD_Response* mdh_response = MHD_create_response_from_buffer(
       response.length(), (void*)response.c_str(), MHD_RESPMEM_MUST_COPY);
-    int status = MHD_queue_response((MHD_Connection*) data->connection, 
+    int status = MHD_queue_response((MHD_Connection*) data->internal_data, 
             MHD_HTTP_OK, mdh_response);
     MHD_destroy_response(mdh_response);
     

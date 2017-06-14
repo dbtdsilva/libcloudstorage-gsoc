@@ -36,12 +36,11 @@ public:
     using Pointer = std::unique_ptr<IHttpd>;
     // Public structure definitions
     typedef std::map<std::string, std::string> ConnectionValues;
-    struct RequestData {        
-        IHttpd* obj;
+    struct RequestData {
         std::string url;
         ConnectionValues args;
         ConnectionValues headers;
-        void *connection;
+        void *internal_data;
         void *custom_data;
     };
     typedef std::function<int(IHttpd::RequestData*)> CallbackFunction;
@@ -70,7 +69,11 @@ public:
      * @param arg_name The argument being searched
      * @return Returns the value of the argument or empty if not found
      */
-    virtual std::string getArgument(RequestData* data, const std::string& arg_name) = 0;
+    static std::string getArgument(RequestData* data, const std::string& arg_name)
+    {
+        auto it = data->args.find(arg_name);
+        return it == data->args.end() ? "" : it->second;
+    }
     
     /**
      * Searches for a specific header in the given request.
@@ -79,7 +82,11 @@ public:
      * @param header_name The header name being searched
      * @return Returns the value of the header or empty if not found
      */
-    virtual std::string getHeader(RequestData* data, const std::string& header_name) = 0;
+    static std::string getHeader(RequestData* data, const std::string& header_name)
+    {
+        auto it = data->args.find(header_name);
+        return it == data->args.end() ? "" : it->second;
+    }
     
     /**
      * This functions allows to send a response for a given request
@@ -90,13 +97,6 @@ public:
      *  an error has occured.
      */
     virtual int sendResponse(RequestData* data, const std::string& response) = 0;
-    
-protected:
-    struct CallbackData {        
-        IHttpd* obj;
-        CallbackFunction request_callback;
-        void* custom_data;
-    } callback_data;
 };
 
 

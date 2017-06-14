@@ -34,13 +34,17 @@ public:
     void startServer(uint16_t port, CallbackFunction request_callback, void* data) override;
     void stopServer() override;
     
-    virtual std::string getArgument(RequestData*, const std::string& arg_name) override;
-    virtual std::string getHeader(RequestData*, const std::string& header_name) override;
     virtual int sendResponse(RequestData*, const std::string& response) override;
 private:
     static int MHDRequestCallback(void*, MHD_Connection*, const char*, 
             const char*, const char*, const char*, size_t*, void**);
     MHD_Daemon* http_server;
+    
+    struct CallbackData {        
+        IHttpd* obj;
+        CallbackFunction request_callback;
+        void* custom_data;
+    } callback_data;
 };
 
 }
