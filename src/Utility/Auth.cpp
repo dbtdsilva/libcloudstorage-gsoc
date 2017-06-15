@@ -30,7 +30,7 @@
 
 #include "Utility.h"
 
-const uint16_t DEFAULT_REDIRECT_URI_PORT = 12345;
+const uint16_t DEFAULT_REDIRECT_URI_PORT = 8080;
 
 const std::string JQUERY =
     "<script src=\"https://code.jquery.com/jquery-3.1.0.min.js\""
