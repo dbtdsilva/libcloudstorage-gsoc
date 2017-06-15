@@ -190,7 +190,7 @@ void MegaNz::initialize(InitData&& data) {
   {
     std::lock_guard<std::mutex> lock(auth_mutex());
     if (data.hints_.find("client_id") == std::end(data.hints_))
-      mega_ = util::make_unique<MegaApi>("ZVhB0Czb");
+      mega_ = util::make_unique<MegaApi>("4T4khZxJ");
     else
       setWithHint(data.hints_, "client_id", [this](std::string v) {
         mega_ = util::make_unique<MegaApi>(v.c_str());

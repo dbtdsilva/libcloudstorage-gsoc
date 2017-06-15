@@ -205,8 +205,8 @@ std::vector<IItem::Pointer> OneDrive::listDirectoryResponse(
 }
 
 OneDrive::Auth::Auth() {
-  set_client_id("56a1d60f-ea71-40e9-a489-b87fba12a23e");
-  set_client_secret("zJRAsd0o4E9c33q4OLc7OhY");
+  set_client_id("f4e81165-c8fc-4018-ad8d-316faf8db084");
+  set_client_secret("ngVegfKeSze2eZyajSgaC9Z");
 }
 
 std::string OneDrive::Auth::authorizeLibraryUrl() const {

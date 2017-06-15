@@ -233,8 +233,8 @@ IItem::Pointer Dropbox::toItem(const Json::Value& v) {
 }
 
 Dropbox::Auth::Auth() {
-  set_client_id("ktryxp68ae5cicj");
-  set_client_secret("6evu94gcxnmyr59");
+  set_client_id("ydqfp8ik55zrj9v");
+  set_client_secret("2991y2rcg4htbfh");
 }
 
 std::string Dropbox::Auth::authorizeLibraryUrl() const {
