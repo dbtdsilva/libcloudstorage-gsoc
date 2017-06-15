@@ -31,6 +31,7 @@
 #include "Utility.h"
 
 const uint16_t DEFAULT_REDIRECT_URI_PORT = 8080;
+const std::string DEFAULT_REDIRECT_URI_PREFIX = "/auth";
 
 const std::string JQUERY =
     "<script src=\"https://code.jquery.com/jquery-3.1.0.min.js\""
@@ -85,7 +86,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     std::string page = JQUERY;
 
-    if (rdata->url == "/login") page += LOGIN_PAGE;
+    if (rdata->url == DEFAULT_REDIRECT_URI_PREFIX + "/login") page += LOGIN_PAGE;
 
     std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
     if (!code.empty()) {
@@ -140,7 +141,8 @@ void Auth::set_client_secret(const std::string& client_secret) {
 }
 
 std::string Auth::redirect_uri() const {
-  return "http://localhost:" + std::to_string(redirect_uri_port());
+  return "http://localhost:" + std::to_string(redirect_uri_port()) + 
+          DEFAULT_REDIRECT_URI_PREFIX;
 }
 
 uint16_t Auth::redirect_uri_port() const { return redirect_uri_port_; }
