@@ -68,6 +68,7 @@ namespace cloudstorage {
 namespace {
 
 struct HttpServerData {
+  const Auth* obj_;
   std::string code_;
   std::string code_parameter_name_;
   std::string error_parameter_name_;
@@ -86,7 +87,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     std::string page = JQUERY;
 
-    if (rdata->url == DEFAULT_REDIRECT_URI_PREFIX + "/login") page += LOGIN_PAGE;
+    if (rdata->url == data->obj_->redirect_uri_prefix() + "/login") page += LOGIN_PAGE;
 
     std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
     if (!code.empty()) {
@@ -116,7 +117,8 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
 
 }  // namespace
 
-Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_() {}
+Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(), 
+        redirect_uri_prefix_(DEFAULT_REDIRECT_URI_PREFIX) {}
 
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
@@ -142,12 +144,18 @@ void Auth::set_client_secret(const std::string& client_secret) {
 
 std::string Auth::redirect_uri() const {
   return "http://localhost:" + std::to_string(redirect_uri_port()) + 
-          DEFAULT_REDIRECT_URI_PREFIX;
+          redirect_uri_prefix_;
 }
 
 uint16_t Auth::redirect_uri_port() const { return redirect_uri_port_; }
 
 void Auth::set_redirect_uri_port(uint16_t port) { redirect_uri_port_ = port; }
+
+std::string Auth::redirect_uri_prefix() const { return redirect_uri_prefix_; }
+
+void Auth::set_redirect_uri_prefix(const std::string& prefix) {
+    redirect_uri_prefix_ = prefix;
+}
 
 Auth::Token* Auth::access_token() const { return access_token_.get(); }
 
@@ -163,7 +171,8 @@ std::string Auth::awaitAuthorizationCode(
     std::function<void()> server_stopped) const {
   uint16_t http_server_port = redirect_uri_port();
   Semaphore semaphore;
-  HttpServerData data = {"",
+  HttpServerData data = {this, 
+                         "",
                          code_parameter_name,
                          error_parameter_name,
                          http_server_port,
