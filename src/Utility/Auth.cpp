@@ -122,6 +122,42 @@ Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(),
 
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
+std::string Auth::get_login_page() const {
+    return \
+    "<body>"
+    "libcloudstorage login page"
+    "<table>"
+    "<tr><td>Login:</td><td><input id='login'></td></tr>"
+    "<tr><td>Password:</td><td><input id='password' type='password'></td></tr>"
+    "<tr><td><input id='submit' type='button' value='Login'></td></tr>"
+    "<script>"
+    " $(function() {"
+    "   $('#submit').click(function() {"
+    "     $.ajax({"
+    "       url: '/',"
+    "       method: 'GET',"
+    "       data: {"
+    "         'code' : $('#login').val() + '" +
+    std::string(cloudstorage::Auth::SEPARATOR) +
+    "' + $('#password').val(),"
+    "         'accepted' : 'true'"
+    "       }"
+    "     });"
+    "   })"
+    " });"
+    "</script>"
+    "</table>"
+    "</body>";
+}
+
+std::string Auth::get_success_page() const {
+    return "<body>Success.</body>";
+}
+
+std::string Auth::get_error_page(const std::string& error) const {
+    return "<body>Error occurred.</body>";
+}
+
 const std::string& Auth::authorization_code() const {
   return authorization_code_;
 }

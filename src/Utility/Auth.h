@@ -36,6 +36,10 @@ class Auth : public IAuth {
 
   void initialize(IHttp*, IHttpd*) override;
 
+  virtual std::string get_login_page() const override;
+  virtual std::string get_success_page() const override;
+  virtual std::string get_error_page(const std::string& = "") const override;
+
   const std::string& authorization_code() const override;
   void set_authorization_code(const std::string&) override;
 
