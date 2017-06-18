@@ -33,10 +33,17 @@
 const uint16_t DEFAULT_REDIRECT_URI_PORT = 8080;
 const std::string DEFAULT_REDIRECT_URI_PREFIX = "/auth";
 
-const std::string JQUERY =
-    "<script src=\"https://code.jquery.com/jquery-3.1.0.min.js\""
-    "integrity=\"sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=\""
-    "crossorigin=\"anonymous\"></script>";
+const std::string HEAD =
+    "<head><meta name=\"Author\" content=\"VideoLAN\" />"
+    "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
+    "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
+    "<title>VLC Local Authentication Server</title>"
+    "<script async=\"async\" src=\"//images.videolan.org/js/bootstrap.min.js\" "
+        "type=\"text/javascript\"></script>"
+    "<script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js' "
+        "type='text/javascript'></script>"
+    "</head>";
 
 namespace cloudstorage {
 namespace {
@@ -53,13 +60,13 @@ struct HttpServerData {
 
 std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
   std::stringstream stream;
-  stream << "<script>$.ajax(" << json << ")</script>";
+  stream << "<script>$.ajax(" << json.toStyledString() << ")</script>";
   return stream.str();
 }
 
 std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
-    std::string page = JQUERY;
+    std::string page = HEAD;
 
     std::string url = rdata->url;
     // Normalize the URL
@@ -73,21 +80,28 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     else if (url == data->obj_->redirect_uri_prefix())
     {
         std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
-        if (!code.empty()) {
+        std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
+        std::string accepted = IHttpd::getArgument(rdata, "accepted");
+        if (!code.empty())
+        {
             data->code_ = code;
             Json::Value json;
             json["data"]["accepted"] = "true";
-            page += data->obj_->get_success_page() + sendHttpRequestFromJavaScript(json);
+            page += data->obj_->get_success_page() +
+                    sendHttpRequestFromJavaScript(json);
         }
-
-        std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
-        if (!error.empty()) {
+        else if (!error.empty())
+        {
             Json::Value json;
             json["data"]["accepted"] = "false";
-            page += data->obj_->get_error_page() + sendHttpRequestFromJavaScript(json);
+            page += data->obj_->get_error_page() +
+                    sendHttpRequestFromJavaScript(json);
+        }
+        else
+        {
+            page += "<body>Invalid request</body>";
         }
 
-        std::string accepted = IHttpd::getArgument(rdata, "accepted");
         if (!accepted.empty()) {
             if (accepted == "true") {
                 data->state_ = HttpServerData::Accepted;
