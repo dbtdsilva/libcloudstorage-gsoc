@@ -38,32 +38,6 @@ const std::string JQUERY =
     "integrity=\"sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=\""
     "crossorigin=\"anonymous\"></script>";
 
-const std::string LOGIN_PAGE =
-    "<body>"
-    "libcloudstorage login page"
-    "<table>"
-    "<tr><td>Login:</td><td><input id='login'></td></tr>"
-    "<tr><td>Password:</td><td><input id='password' type='password'></td></tr>"
-    "<tr><td><input id='submit' type='button' value='Login'></td></tr>"
-    "<script>"
-    " $(function() {"
-    "   $('#submit').click(function() {"
-    "     $.ajax({"
-    "       url: '/',"
-    "       method: 'GET',"
-    "       data: {"
-    "         'code' : $('#login').val() + '" +
-    std::string(cloudstorage::Auth::SEPARATOR) +
-    "' + $('#password').val(),"
-    "         'accepted' : 'true'"
-    "       }"
-    "     });"
-    "   })"
-    " });"
-    "</script>"
-    "</table>"
-    "</body>";
-
 namespace cloudstorage {
 namespace {
 
@@ -87,37 +61,52 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     std::string page = JQUERY;
 
-    if (rdata->url == data->obj_->redirect_uri_prefix() + "/login") page += LOGIN_PAGE;
+    std::string url = rdata->url;
+    // Normalize the URL
+    if (url.at(url.size() - 1) == '/')
+        url.pop_back();
 
-    std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
-    if (!code.empty()) {
-        data->code_ = code;
-        Json::Value json;
-        json["data"]["accepted"] = "true";
-        page += "<body>Success.</body>" + sendHttpRequestFromJavaScript(json);
+    if (url == data->obj_->redirect_uri_prefix() + "/login")
+    {
+        page += data->obj_->get_login_page();
+    }
+    else if (url == data->obj_->redirect_uri_prefix())
+    {
+        std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
+        if (!code.empty()) {
+            data->code_ = code;
+            Json::Value json;
+            json["data"]["accepted"] = "true";
+            page += data->obj_->get_success_page() + sendHttpRequestFromJavaScript(json);
+        }
+
+        std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
+        if (!error.empty()) {
+            Json::Value json;
+            json["data"]["accepted"] = "false";
+            page += data->obj_->get_error_page() + sendHttpRequestFromJavaScript(json);
+        }
+
+        std::string accepted = IHttpd::getArgument(rdata, "accepted");
+        if (!accepted.empty()) {
+            if (accepted == "true") {
+                data->state_ = HttpServerData::Accepted;
+            } else
+                data->state_ = HttpServerData::Denied;
+            data->semaphore_->notify();
+        }
+    }
+    else
+    {
+        page += "<body>Page not found</body>";
     }
 
-    std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
-    if (!error.empty()) {
-        Json::Value json;
-        json["data"]["accepted"] = "false";
-        page += "<body>Error occurred.</body>" + sendHttpRequestFromJavaScript(json);
-    }
-    
-    std::string accepted = IHttpd::getArgument(rdata, "accepted");
-    if (!accepted.empty()) {
-        if (accepted == "true") {
-            data->state_ = HttpServerData::Accepted;
-        } else
-            data->state_ = HttpServerData::Denied;
-        data->semaphore_->notify();
-    }
     return page;
 }
 
 }  // namespace
 
-Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(), 
+Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(),
         redirect_uri_prefix_(DEFAULT_REDIRECT_URI_PREFIX) {}
 
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
@@ -179,7 +168,7 @@ void Auth::set_client_secret(const std::string& client_secret) {
 }
 
 std::string Auth::redirect_uri() const {
-  return "http://localhost:" + std::to_string(redirect_uri_port()) + 
+  return "http://localhost:" + std::to_string(redirect_uri_port()) +
           redirect_uri_prefix_;
 }
 
@@ -207,7 +196,7 @@ std::string Auth::awaitAuthorizationCode(
     std::function<void()> server_stopped) const {
   uint16_t http_server_port = redirect_uri_port();
   Semaphore semaphore;
-  HttpServerData data = {this, 
+  HttpServerData data = {this,
                          "",
                          code_parameter_name,
                          error_parameter_name,
