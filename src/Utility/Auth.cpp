@@ -66,59 +66,48 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
 
 std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
-    std::string page = HEAD;
+    const Auth* auth = data->obj_;
+    std::string page = "<html>" + HEAD;
 
     std::string url = rdata->url;
     // Normalize the URL
     if (url.at(url.size() - 1) == '/')
         url.pop_back();
 
-    // Requesting a login page
-    if (url == data->obj_->redirect_uri_prefix() + "/login")
-    {
-        page += data->obj_->get_login_page();
-    }
-    // Submitting an authentication request
-    else if (url == data->obj_->redirect_uri_prefix())
-    {
+    if (url == auth->redirect_uri_prefix() + "/login") {
+        // Requesting the login page
+        page += auth->get_login_page();
+    } else if (url == auth->redirect_uri_prefix()) {
+        // Submitting an authentication request
         std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
         std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
         std::string accepted = IHttpd::getArgument(rdata, "accepted");
-        if (!accepted.empty())
-        {
+        if (!accepted.empty()) {
             if (!code.empty()) data->code_ = code;
             if (accepted == "true") {
                 data->state_ = HttpServerData::Accepted;
             } else
                 data->state_ = HttpServerData::Denied;
             data->semaphore_->notify();
-        }
-        else if (!code.empty())
-        {
-            data->code_ = code;
+        } else if (!code.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "true";
-            page += data->obj_->get_success_page() +
+            page += auth->get_success_page() +
                     sendHttpRequestFromJavaScript(json);
-        }
-        else if (!error.empty())
-        {
+        } else if (!error.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "false";
-            page += data->obj_->get_error_page() +
+            page += auth->get_error_page() +
                     sendHttpRequestFromJavaScript(json);
+        } else {
+            page += auth->getArgument(data);
         }
-        else
-        {
-            page += "<body>Invalid request</body>";
-        }
-    }
-    // Requested a non-existing page
-    else
-    {
+    } else {
+        // Requested a non-existing page
         page += "<body>Page not found</body>";
     }
 
+    page += "</html>";
     return page;
 }
 
