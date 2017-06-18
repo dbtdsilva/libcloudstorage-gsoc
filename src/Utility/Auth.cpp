@@ -92,7 +92,7 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
 std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     const Auth* auth = data->obj_;
-    std::string page = "<html>" + HEAD + "<body>";
+    std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
 
     std::string url = rdata->url;
     // Normalize the URL
@@ -173,7 +173,10 @@ std::string Auth::get_login_page() const {
 }
 
 std::string Auth::get_success_page() const {
-    return "Success";
+    return "<div id='bodyInner' class='blue'>" + NAVBAR + \
+        "<div class=\"container center-block\">"
+        "<h1 class=\"text-center\">Successfully authenticated</h1>"
+        "</div></div>";
 }
 
 std::string Auth::get_error_page(const std::string& error) const {
