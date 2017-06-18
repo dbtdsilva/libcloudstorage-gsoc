@@ -60,7 +60,7 @@ struct HttpServerData {
 
 std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
   std::stringstream stream;
-  stream << "<script>$.ajax(" << json.toStyledString() << ")</script>";
+  stream << "<script>$.ajax(" << json << ")</script>";
   return stream.str();
 }
 
@@ -73,16 +73,27 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     if (url.at(url.size() - 1) == '/')
         url.pop_back();
 
+    // Requesting a login page
     if (url == data->obj_->redirect_uri_prefix() + "/login")
     {
         page += data->obj_->get_login_page();
     }
+    // Submitting an authentication request
     else if (url == data->obj_->redirect_uri_prefix())
     {
         std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
         std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
         std::string accepted = IHttpd::getArgument(rdata, "accepted");
-        if (!code.empty())
+        if (!accepted.empty())
+        {
+            if (!code.empty()) data->code_ = code;
+            if (accepted == "true") {
+                data->state_ = HttpServerData::Accepted;
+            } else
+                data->state_ = HttpServerData::Denied;
+            data->semaphore_->notify();
+        }
+        else if (!code.empty())
         {
             data->code_ = code;
             Json::Value json;
@@ -101,15 +112,8 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         {
             page += "<body>Invalid request</body>";
         }
-
-        if (!accepted.empty()) {
-            if (accepted == "true") {
-                data->state_ = HttpServerData::Accepted;
-            } else
-                data->state_ = HttpServerData::Denied;
-            data->semaphore_->notify();
-        }
     }
+    // Requested a non-existing page
     else
     {
         page += "<body>Page not found</body>";
