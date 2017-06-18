@@ -61,6 +61,7 @@ class Auth : public IAuth {
   void set_access_token(Token::Pointer) override;
 
   IHttp* http() const override;
+  IHttpd* httpd() const override;
 
   std::string awaitAuthorizationCode(
       std::string code_parameter_name, std::string error_parameter_name,

@@ -47,9 +47,25 @@ class IAuth {
 
   virtual void initialize(IHttp*, IHttpd*) = 0;
   virtual IHttp* http() const = 0;
+  virtual IHttpd* httpd() const = 0;
 
+  /**
+   * This function returns an authentication login page that should be overriden
+   * with the body's content of the page in HTML.
+   * @return the login page as string
+   */
   virtual std::string get_login_page() const = 0;
+  /**
+   * This function returns a success page that should be overriden
+   * with the body's content of the page in HTML.
+   * @return the login page as string
+   */
   virtual std::string get_success_page() const = 0;
+  /**
+   * This function is a getter that allows to obtain an error page that should
+   * be overriden with the body's content of the page in HTML.
+   * @return an error page as string
+   */
   virtual std::string get_error_page(const std::string& = "") const = 0;
 
   virtual const std::string& authorization_code() const = 0;

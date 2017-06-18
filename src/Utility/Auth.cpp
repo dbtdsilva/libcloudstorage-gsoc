@@ -33,17 +33,42 @@
 const uint16_t DEFAULT_REDIRECT_URI_PORT = 8080;
 const std::string DEFAULT_REDIRECT_URI_PREFIX = "/auth";
 
-const std::string HEAD =
+const std::string HEAD = \
     "<head><meta name=\"Author\" content=\"VideoLAN\" />"
     "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
     "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />"
     "<title>VLC Local Authentication Server</title>"
-    "<script async=\"async\" src=\"//images.videolan.org/js/bootstrap.min.js\" "
-        "type=\"text/javascript\"></script>"
     "<script src='//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js' "
         "type='text/javascript'></script>"
+    "<script async=\"async\" src=\"//images.videolan.org/js/bootstrap.min.js\" "
+        "type=\"text/javascript\"></script>"
+    "<link rel=\"stylesheet\" type=\"text/css\" "
+        "href=\"//images.videolan.org/style/bootstrap.min.css\" />"
+    "<link rel=\"stylesheet\" type=\"text/css\" "
+        "href=\"//images.videolan.org/style/style.min.css\" />"
     "</head>";
+
+const std::string NAVBAR = \
+    "<nav id=\"nav\" class=\"navbar navbar-default navbar-fixed-top\">"
+    "<div class=\"container\">"
+    "<div class=\"navbar-header\">"
+    "<a class=\"navbar-brand\" href=\"//www.videolan.org/\">"
+    "<img src='//images.videolan.org/images/logoBlue.png' "
+        "alt='VideoLAN association' />"
+    "</a><a class=\"navbar-brand\" style=\"padding: 15px 15px\">"
+        "Libcloudstorage Local Server</a>"
+    "<button type=\"button\" class=\"navbar-toggle collapsed\" "
+        "data-toggle=\"collapse\" data-target=\"#main-navbar\" "
+        "aria-expanded=\"false\">"
+    "<span class=\"sr-only\">Toggle navigation</span>"
+    "<span class=\"icon-bar\"></span>"
+    "<span class=\"icon-bar\"></span>"
+    "<span class=\"icon-bar\"></span>"
+    "</button>"
+    "</div>"
+    "</div>"
+    "</nav>";
 
 namespace cloudstorage {
 namespace {
@@ -67,7 +92,7 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
 std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     const Auth* auth = data->obj_;
-    std::string page = "<html>" + HEAD;
+    std::string page = "<html>" + HEAD + "<body>";
 
     std::string url = rdata->url;
     // Normalize the URL
@@ -79,9 +104,12 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         page += auth->get_login_page();
     } else if (url == auth->redirect_uri_prefix()) {
         // Submitting an authentication request
-        std::string code = IHttpd::getArgument(rdata, data->code_parameter_name_);
-        std::string error = IHttpd::getArgument(rdata, data->error_parameter_name_);
-        std::string accepted = IHttpd::getArgument(rdata, "accepted");
+        std::string code = auth->httpd()->
+                getArgument(rdata, data->code_parameter_name_);
+        std::string error = auth->httpd()->
+                getArgument(rdata, data->error_parameter_name_);
+        std::string accepted = auth->httpd()->
+                getArgument(rdata, "accepted");
         if (!accepted.empty()) {
             if (!code.empty()) data->code_ = code;
             if (accepted == "true") {
@@ -100,14 +128,14 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
             page += auth->get_error_page() +
                     sendHttpRequestFromJavaScript(json);
         } else {
-            page += auth->getArgument(data);
+            page += auth->get_error_page("Bad request");
         }
     } else {
         // Requested a non-existing page
-        page += "<body>Page not found</body>";
+        page += auth->get_error_page("Page not found");
     }
 
-    page += "</html>";
+    page += "</body></html>";
     return page;
 }
 
@@ -120,7 +148,6 @@ void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd
 
 std::string Auth::get_login_page() const {
     return \
-    "<body>"
     "libcloudstorage login page"
     "<table>"
     "<tr><td>Login:</td><td><input id='login'></td></tr>"
@@ -142,16 +169,21 @@ std::string Auth::get_login_page() const {
     "   })"
     " });"
     "</script>"
-    "</table>"
-    "</body>";
+    "</table>";
 }
 
 std::string Auth::get_success_page() const {
-    return "<body>Success.</body>";
+    return "Success";
 }
 
 std::string Auth::get_error_page(const std::string& error) const {
-    return "<body>Error occurred.</body>";
+    std::string error_page = "<div id='bodyInner' class='blue'>" + NAVBAR;
+    error_page += "<div class=\"container center-block\">"
+            "<h1 class=\"text-center\">An error occurred</h1>";
+    if (!error.empty())
+        error_page += "<h2 class=\"text-center\">" + error + "</h2>";
+    error_page += "</div></div>";
+    return error_page;
 }
 
 const std::string& Auth::authorization_code() const {
@@ -196,6 +228,8 @@ void Auth::set_access_token(Token::Pointer token) {
 }
 
 IHttp* Auth::http() const { return http_; }
+
+IHttpd* Auth::httpd() const { return httpd_; }
 
 std::string Auth::awaitAuthorizationCode(
     std::string code_parameter_name, std::string error_parameter_name,
