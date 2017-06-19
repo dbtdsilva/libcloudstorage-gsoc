@@ -93,6 +93,9 @@ class MegaNz : public CloudProvider {
    public:
     Auth();
 
+    std::string get_login_page() const override;
+    std::string get_success_page() const override;
+
     std::string authorizeLibraryUrl() const override;
 
     IHttpRequest::Pointer exchangeAuthorizationCodeRequest(
