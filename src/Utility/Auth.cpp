@@ -50,7 +50,7 @@ const std::string HEAD = \
     "</head>";
 
 const std::string NAVBAR = \
-    "<nav id=\"nav\" class=\"navbar navbar-default navbar-fixed-top\">"
+    "<nav id=\"nav\" class=\"navbar navbar-default navbar-static-top\">"
     "<div class=\"container\">"
     "<div class=\"navbar-header\">"
     "<a class=\"navbar-brand\" href=\"//www.videolan.org/\">"
@@ -94,6 +94,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     const Auth* auth = data->obj_;
     std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
 
+    fprintf(stderr, "cloudstorage: received request at %s\n", rdata->url.c_str());
     std::string url = rdata->url;
     // Normalize the URL
     if (url.at(url.size() - 1) == '/')
@@ -136,6 +137,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     }
 
     page += "</body></html>";
+    fprintf(stderr, "cloudstorage response: %s\n\n", page.c_str());
     return page;
 }
 
@@ -147,40 +149,49 @@ Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(),
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
 std::string Auth::get_login_page() const {
-    return \
-    "libcloudstorage login page"
-    "<table>"
-    "<tr><td>Login:</td><td><input id='login'></td></tr>"
-    "<tr><td>Password:</td><td><input id='password' type='password'></td></tr>"
-    "<tr><td><input id='submit' type='button' value='Login'></td></tr>"
-    "<script>"
-    " $(function() {"
-    "   $('#submit').click(function() {"
-    "     $.ajax({"
-    "       url: '/',"
-    "       method: 'GET',"
-    "       data: {"
-    "         'code' : $('#login').val() + '" +
-    std::string(cloudstorage::Auth::SEPARATOR) +
-    "' + $('#password').val(),"
-    "         'accepted' : 'true'"
-    "       }"
-    "     });"
-    "   })"
-    " });"
-    "</script>"
-    "</table>";
+    // The response is sent on code as login##password
+    return "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
+        "<div class=\"container center-block\">"
+        "<div class=\"form-horizontal\">"
+        "<div class=\"form-group\">"
+        "<label for=\"inputUsername\" class=\"col-sm-2 control-label\">Username</label>"
+        "<div class=\"col-sm-10\">"
+        "<input type=\"text\" class=\"form-control\" id=\"inputUsername\" placeholder=\"Username\">"
+        "</div>"
+        "</div>"
+        "<div class=\"form-group\">"
+        "<label for=\"inputPassword\" class=\"col-sm-2 control-label\">Password</label>"
+        "<div class=\"col-sm-10\">"
+        "<input type=\"password\" class=\"form-control\" id=\"inputPassword\" placeholder=\"Password\">"
+        "</div>"
+        "</div>"
+        "<div class=\"form-group\">"
+        "<div class=\"col-sm-offset-2 col-sm-10\">"
+        "<button id=\"submit\" class=\"btn btn-default\">Sign in</button>"
+        "</div>"
+        "</div>"
+        "</div>"
+        "</div>"
+        "<script>"
+        " $(function() {"
+        "   $('#submit').click(function() {"
+        "window.location.href = \"" + redirect_uri_prefix_ + "?code=\""
+            " + $('#inputUsername').val() + '" + std::string(SEPARATOR) + \
+            "' + $('#inputPassword').val() + \"&accepted=true\";"
+        "}); });"
+        "</script>";
 }
 
 std::string Auth::get_success_page() const {
-    return "<div id='bodyInner' class='blue'>" + NAVBAR + \
+    return "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
         "<div class=\"container center-block\">"
         "<h1 class=\"text-center\">Successfully authenticated</h1>"
         "</div></div>";
 }
 
 std::string Auth::get_error_page(const std::string& error) const {
-    std::string error_page = "<div id='bodyInner' class='blue'>" + NAVBAR;
+    std::string error_page = \
+            "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR;
     error_page += "<div class=\"container center-block\">"
             "<h1 class=\"text-center\">An error occurred</h1>";
     if (!error.empty())
