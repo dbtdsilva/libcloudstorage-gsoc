@@ -84,15 +84,24 @@ struct HttpServerData {
 };
 
 std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
-  std::stringstream stream;
-  stream << "<script>$.ajax(" << json << ")</script>";
-  return stream.str();
+    std::stringstream stream;
+    stream << "<script>$.ajax(" << json << ")</script>";
+    return stream.str();
+}
+
+std::string get_page(const std::string& body_content) {
+    std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
+    page += "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
+        "<div class=\"container center-block\">";
+    page += body_content;
+    page += "</div></div></body></html>";
+    return page;
 }
 
 std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     const Auth* auth = data->obj_;
-    std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
+    std::string page;
     std::string url = rdata->url;
     // Normalize the URL
     if (url.at(url.size() - 1) == '/')
@@ -100,7 +109,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
 
     if (url == auth->redirect_uri_prefix() + "/login") {
         // Requesting the login page
-        page += auth->get_login_page();
+        page = get_page(auth->get_login_page());
     } else if (url == auth->redirect_uri_prefix()) {
         // Submitting an authentication request
         std::string code = auth->httpd()->
@@ -113,15 +122,15 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         if (!code.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "true";
-            page += auth->get_success_page() +
-                    sendHttpRequestFromJavaScript(json);
+            page = get_page(auth->get_success_page() +
+                    sendHttpRequestFromJavaScript(json));
         } else if (!error.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "false";
-            page += auth->get_error_page() +
-                    sendHttpRequestFromJavaScript(json);
+            page = get_page(auth->get_error_page() +
+                    sendHttpRequestFromJavaScript(json));
         } else {
-            page += auth->get_error_page("Bad request");
+            page = get_page(auth->get_error_page("Bad request"));
         }
 
         if (!accepted.empty()) {
@@ -134,10 +143,10 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         }
     } else {
         // Requested a non-existing page
-        page += auth->get_error_page("Page not found");
+        page = get_page(auth->get_error_page("Page not found"));
     }
 
-    page += "</body></html>";
+    fprintf(stderr, "\n\nPage: %s\n\n", page.c_str());
     return page;
 }
 
@@ -150,53 +159,44 @@ void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd
 
 std::string Auth::get_login_page() const {
     // The response is sent on code as login##password
-    return "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
-        "<div class=\"container center-block\">"
-        "<div class=\"form-horizontal\">"
-        "<div class=\"form-group\">"
-        "<label for=\"inputUsername\" class=\"col-sm-2 control-label\">Username</label>"
-        "<div class=\"col-sm-10\">"
-        "<input type=\"text\" class=\"form-control\" id=\"inputUsername\" placeholder=\"Username\">"
-        "</div>"
-        "</div>"
-        "<div class=\"form-group\">"
-        "<label for=\"inputPassword\" class=\"col-sm-2 control-label\">Password</label>"
-        "<div class=\"col-sm-10\">"
-        "<input type=\"password\" class=\"form-control\" id=\"inputPassword\" placeholder=\"Password\">"
-        "</div>"
-        "</div>"
-        "<div class=\"form-group\">"
-        "<div class=\"col-sm-offset-2 col-sm-10\">"
-        "<button id=\"submit\" class=\"btn btn-default\">Sign in</button>"
-        "</div>"
-        "</div>"
-        "</div>"
-        "</div>"
+    return \
         "<script>"
-        " $(function() {"
-        "   $('#submit').click(function() {"
-        "window.location.href = \"" + redirect_uri_prefix_ + "?code=\""
-            " + encodeURIComponent($('#inputUsername').val() + '" + std::string(SEPARATOR) + \
+        "function submitData(){"
+            "window.location.href = \"" + redirect_uri_prefix_ + "?code=\""
+            " + encodeURIComponent($('#inputUsername').val() + '" \
+            + std::string(SEPARATOR) + \
             "' + $('#inputPassword').val()) + \"&accepted=true\";"
-        "}); });"
-        "</script>";
+            "return false;};"
+        "</script>"
+        "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">"
+        "<div class=\"form-group\">"
+        "<label for=\"inputUsername\" "
+            "class=\"col-sm-2 control-label\">Username</label>"
+        "<div class=\"col-sm-10\">"
+        "<input type=\"text\" "
+            "class=\"form-control\" id=\"inputUsername\" placeholder=\"Username\">"
+        "</div></div>"
+        "<div class=\"form-group\">"
+        "<label for=\"inputPassword\" "
+            "class=\"col-sm-2 control-label\">Password</label>"
+        "<div class=\"col-sm-10\">"
+        "<input type=\"password\" "
+            "class=\"form-control\" id=\"inputPassword\" placeholder=\"Password\">"
+        "</div></div>"
+        "<div class=\"form-group\"><div class=\"col-sm-offset-2 col-sm-10\">"
+        "<button type=\"submit\" id=\"submit\" "
+            "class=\"btn btn-default\">Sign in</button>"
+        "</div></form>";
 }
 
 std::string Auth::get_success_page() const {
-    return "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
-        "<div class=\"container center-block\">"
-        "<h1 class=\"text-center\">Successfully authenticated</h1>"
-        "</div></div>";
+    return "<h1 class=\"text-center\">Successfully authenticated</h1>";
 }
 
 std::string Auth::get_error_page(const std::string& error) const {
-    std::string error_page = \
-            "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR;
-    error_page += "<div class=\"container center-block\">"
-            "<h1 class=\"text-center\">An error occurred</h1>";
+    std::string error_page = "<h1 class=\"text-center\">An error occurred</h1>";
     if (!error.empty())
         error_page += "<h2 class=\"text-center\">" + error + "</h2>";
-    error_page += "</div></div>";
     return error_page;
 }
 
