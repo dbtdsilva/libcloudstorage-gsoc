@@ -151,24 +151,31 @@ std::string currentDateAndTime() {
 }  // namespace
 
 AmazonS3::AmazonS3()
-    : CloudProvider(util::make_unique<Auth>()), region_(DEFAULT_REGION)
+    : CloudProvider(util::make_unique<Auth>())
 {
+}
+
+void AmazonS3::unpackCredentials(const std::string& code) {
+  auto separator = code.find_first_of(Auth::SEPARATOR);
+  auto at_position = code.find_last_of('@', separator);
+  if (at_position == std::string::npos || separator == std::string::npos)
+    return;
+  access_id_ = code.substr(0, at_position);
+  region_ =
+      code.substr(at_position + 1, separator - at_position - 1);
+  secret_ = code.substr(separator + strlen(Auth::SEPARATOR));
 }
 
 void AmazonS3::initialize(InitData&& init_data) {
   {
     std::unique_lock<std::mutex> lock(auth_mutex());
-    auto data = creditentialsFromString(init_data.token_);
-    access_id_ = data.first;
-    secret_ = data.second;
-    setWithHint(init_data.hints_, "aws_region",
-                [this](std::string str) { region_ = str; });
+    unpackCredentials(init_data.token_);
   }
   CloudProvider::initialize(std::move(init_data));
 }
 
 std::string AmazonS3::token() const {
-  return access_id() + Auth::SEPARATOR + secret();
+  return access_id() + "@" + region() + Auth::SEPARATOR + secret();
 }
 
 std::string AmazonS3::name() const { return "amazons3"; }
@@ -190,10 +197,7 @@ AuthorizeRequest::Pointer AmazonS3::authorizeAsync() {
         if (callback()->userConsentRequired(*this) !=
             ICallback::Status::WaitForAuthorizationCode)
           return false;
-        auto data = creditentialsFromString(r->getAuthorizationCode());
-        std::unique_lock<std::mutex> lock(auth_mutex());
-        access_id_ = data.first;
-        secret_ = data.second;
+        unpackCredentials(r->getAuthorizationCode());
         return true;
       });
 }
@@ -500,6 +504,11 @@ std::string AmazonS3::secret() const {
   return secret_;
 }
 
+std::string AmazonS3::region() const {
+  std::lock_guard<std::mutex> lock(auth_mutex());
+  return region_;
+}
+
 std::pair<std::string, std::string> AmazonS3::split(const std::string& str) {
   return creditentialsFromString(str);
 }
@@ -546,13 +555,14 @@ std::string AmazonS3::Auth::get_login_page() const {
     std::string page = "<script>"
     "function submitData(){"
         "window.location.href = \"" + redirect_uri_prefix() + "?code=\""
-        " + encodeURIComponent($('#inputAccessKey').val() + '" \
+        " + encodeURIComponent($('#inputAccessKey').val() + '@'"
+        " + $('#inputRegion').val() + '" \
         + std::string(SEPARATOR) + \
         "' + $('#inputSecretKey').val()) + \"&accepted=true\";"
         "return false;};"
     "</script>"
-    "<h2 class=\"text-center\">Mega.Nz Login</h2>"
-    "<h5>Libcloudstorage requires to access your Mega.Nz account in order to "
+    "<h2 class=\"text-center\">Amazon S3 Login</h2>"
+    "<h5>Libcloudstorage requires to access your Amazon S3 account in order to "
         "display the content of your could. This page is running locally and "
         "hosted by your machine. The inserted is going to be safely sent to "
         "<a href=\"https://aws.amazon.com/s3/\">Amazon S3</a> servers.</h5><br/>"
@@ -561,7 +571,7 @@ std::string AmazonS3::Auth::get_login_page() const {
     // Regions
     page += "<div class=\"form-group\">"
     "<label for=\"inputRegion\" "
-        "class=\"col-sm-2 control-label\">Bucket's Region</label>"
+        "class=\"col-sm-2 control-label\">Region</label>"
     "<div class=\"col-sm-10\">"
     "<select id=\"inputRegion\" class=\"form-control\">";
 
