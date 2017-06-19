@@ -93,8 +93,6 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
     HttpServerData* data = static_cast<HttpServerData*>(rdata->custom_data);
     const Auth* auth = data->obj_;
     std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
-
-    fprintf(stderr, "cloudstorage: received request at %s\n", rdata->url.c_str());
     std::string url = rdata->url;
     // Normalize the URL
     if (url.at(url.size() - 1) == '/')
@@ -111,14 +109,8 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
                 getArgument(rdata, data->error_parameter_name_);
         std::string accepted = auth->httpd()->
                 getArgument(rdata, "accepted");
-        if (!accepted.empty()) {
-            if (!code.empty()) data->code_ = code;
-            if (accepted == "true") {
-                data->state_ = HttpServerData::Accepted;
-            } else
-                data->state_ = HttpServerData::Denied;
-            data->semaphore_->notify();
-        } else if (!code.empty()) {
+
+        if (!code.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "true";
             page += auth->get_success_page() +
@@ -131,13 +123,21 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         } else {
             page += auth->get_error_page("Bad request");
         }
+
+        if (!accepted.empty()) {
+            if (!code.empty()) data->code_ = code;
+            if (accepted == "true") {
+                data->state_ = HttpServerData::Accepted;
+            } else
+                data->state_ = HttpServerData::Denied;
+            data->semaphore_->notify();
+        }
     } else {
         // Requested a non-existing page
         page += auth->get_error_page("Page not found");
     }
 
     page += "</body></html>";
-    fprintf(stderr, "cloudstorage response: %s\n\n", page.c_str());
     return page;
 }
 
@@ -176,8 +176,8 @@ std::string Auth::get_login_page() const {
         " $(function() {"
         "   $('#submit').click(function() {"
         "window.location.href = \"" + redirect_uri_prefix_ + "?code=\""
-            " + $('#inputUsername').val() + '" + std::string(SEPARATOR) + \
-            "' + $('#inputPassword').val() + \"&accepted=true\";"
+            " + encodeURIComponent($('#inputUsername').val() + '" + std::string(SEPARATOR) + \
+            "' + $('#inputPassword').val()) + \"&accepted=true\";"
         "}); });"
         "</script>";
 }
