@@ -28,6 +28,22 @@
 #include <iomanip>
 
 const std::string DEFAULT_REGION = "eu-west-2";
+const std::map<std::string, std::string> regions_list_ = {
+    {"us-east-2", "US East (Ohio)"},
+    {"us-east-1", "US East (N. Virginia)"},
+    {"us-west-1", "US West (N. California)"},
+    {"us-west-2", "US West (Oregon)"},
+    {"ca-central-1", "Canada (Central)"},
+    {"ap-south-1", "Asia Pacific (Mumbai)"},
+    {"ap-northeast-2", "Asia Pacific (Seoul)"},
+    {"ap-southeast-1", "Asia Pacific (Singapore)"},
+    {"ap-southeast-2", "Asia Pacific (Sydney)"},
+    {"ap-northeast-1", "Asia Pacific (Tokyo)"},
+    {"eu-central-1", "EU (Frankfurt)"},
+    {"eu-west-1", "EU (Ireland)"},
+    {"eu-west-2", "EU (London)"},
+    {"sa-east-1", "South America (São Paulo)"}
+};
 
 using namespace std::placeholders;
 
@@ -135,23 +151,7 @@ std::string currentDateAndTime() {
 }  // namespace
 
 AmazonS3::AmazonS3()
-    : CloudProvider(util::make_unique<Auth>()), region_(DEFAULT_REGION),
-        regions_list_({
-            {"us-east-2", "US East (Ohio)"},
-            {"us-east-1", "US East (N. Virginia)"},
-            {"us-west-1", "US West (N. California)"},
-            {"us-west-2", "US West (Oregon)"},
-            {"ca-central-1", "Canada (Central)"},
-            {"ap-south-1", "Asia Pacific (Mumbai)"},
-            {"ap-northeast-2", "Asia Pacific (Seoul)"},
-            {"ap-southeast-1", "Asia Pacific (Singapore)"},
-            {"ap-southeast-2", "Asia Pacific (Sydney)"},
-            {"ap-northeast-1", "Asia Pacific (Tokyo)"},
-            {"eu-central-1", "EU (Frankfurt)"},
-            {"eu-west-1", "EU (Ireland)"},
-            {"eu-west-2", "EU (London)"},
-            {"sa-east-1", "South America (São Paulo)"}
-        })
+    : CloudProvider(util::make_unique<Auth>()), region_(DEFAULT_REGION)
 {
 }
 
@@ -540,6 +540,70 @@ IAuth::Token::Pointer AmazonS3::Auth::exchangeAuthorizationCodeResponse(
 IAuth::Token::Pointer AmazonS3::Auth::refreshTokenResponse(
     std::istream&) const {
   return nullptr;
+}
+
+std::string AmazonS3::Auth::get_login_page() const {
+    std::string page = "<script>"
+    "function submitData(){"
+        "window.location.href = \"" + redirect_uri_prefix() + "?code=\""
+        " + encodeURIComponent($('#inputAccessKey').val() + '" \
+        + std::string(SEPARATOR) + \
+        "' + $('#inputSecretKey').val()) + \"&accepted=true\";"
+        "return false;};"
+    "</script>"
+    "<h2 class=\"text-center\">Mega.Nz Login</h2>"
+    "<h5>Libcloudstorage requires to access your Mega.Nz account in order to "
+        "display the content of your could. This page is running locally and "
+        "hosted by your machine. The inserted is going to be safely sent to "
+        "<a href=\"https://aws.amazon.com/s3/\">Amazon S3</a> servers.</h5><br/>"
+    "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">";
+
+    // Regions
+    page += "<div class=\"form-group\">"
+    "<label for=\"inputRegion\" "
+        "class=\"col-sm-2 control-label\">Bucket's Region</label>"
+    "<div class=\"col-sm-10\">"
+    "<select id=\"inputRegion\" class=\"form-control\">";
+
+    for (const auto& region : regions_list_) {
+        page += "<option value=\""+ region.first + "\">" + \
+                region.second + "</option>";
+    }
+    page += "</select>"
+        "</div></div>";
+
+    // Access and Secret Key
+    page += "<div class=\"form-group\">"
+    "<label for=\"inputAccessKey\" "
+        "class=\"col-sm-2 control-label\">Access Key</label>"
+    "<div class=\"col-sm-10\">"
+    "<input type=\"text\" "
+        "class=\"form-control\" id=\"inputAccessKey\" placeholder=\"Access Key ID\">"
+    "</div></div>"
+    "<div class=\"form-group\">"
+    "<label for=\"inputSecretKey\" "
+        "class=\"col-sm-2 control-label\">Secret Key</label>"
+    "<div class=\"col-sm-10\">"
+    "<input type=\"password\" "
+        "class=\"form-control\" id=\"inputSecretKey\" placeholder=\"Secret Access Key\">"
+    "</div></div>"
+    "<div class=\"form-group\"><div class=\"col-sm-offset-2 col-sm-10\">"
+    "<button type=\"submit\" id=\"submit\" "
+        "class=\"btn btn-default\">Sign in</button>"
+    "</div></form>";
+
+    
+    return page;
+}
+
+std::string AmazonS3::Auth::get_success_page() const {
+    // This requires the libcloudstorage to open the window, otherwise,
+    // the browsers won't allow to close it.
+    // "auth:1 Scripts may close only the windows that were opened by it."
+    //return "<script>window.close()</script>";
+    return "<h2 class=\"text-center\">Your login has been sent to "
+            "<a href=\"https://aws.amazon.com/s3/\">Amazon S3</a> server "
+            "successfully</h2>";
 }
 
 }  // namespace cloudstorage

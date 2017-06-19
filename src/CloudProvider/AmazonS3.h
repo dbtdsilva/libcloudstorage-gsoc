@@ -89,6 +89,9 @@ class AmazonS3 : public CloudProvider {
    public:
     Auth();
 
+    std::string get_login_page() const override;
+    std::string get_success_page() const override;
+
     std::string authorizeLibraryUrl() const override;
 
     IHttpRequest::Pointer exchangeAuthorizationCodeRequest(
@@ -102,7 +105,6 @@ class AmazonS3 : public CloudProvider {
   };
 
  private:
-  const std::map<std::string, std::string> regions_list_;
   std::string getUrl(const Item&) const;
 
   std::string access_id_;
