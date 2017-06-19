@@ -27,7 +27,7 @@
 #include <algorithm>
 #include <iomanip>
 
-const std::string DEFAULT_REGION = "eu-central-1";
+const std::string DEFAULT_REGION = "eu-west-2";
 
 using namespace std::placeholders;
 
@@ -135,7 +135,25 @@ std::string currentDateAndTime() {
 }  // namespace
 
 AmazonS3::AmazonS3()
-    : CloudProvider(util::make_unique<Auth>()), region_(DEFAULT_REGION) {}
+    : CloudProvider(util::make_unique<Auth>()), region_(DEFAULT_REGION),
+        regions_list_({
+            {"us-east-2", "US East (Ohio)"},
+            {"us-east-1", "US East (N. Virginia)"},
+            {"us-west-1", "US West (N. California)"},
+            {"us-west-2", "US West (Oregon)"},
+            {"ca-central-1", "Canada (Central)"},
+            {"ap-south-1", "Asia Pacific (Mumbai)"},
+            {"ap-northeast-2", "Asia Pacific (Seoul)"},
+            {"ap-southeast-1", "Asia Pacific (Singapore)"},
+            {"ap-southeast-2", "Asia Pacific (Sydney)"},
+            {"ap-northeast-1", "Asia Pacific (Tokyo)"},
+            {"eu-central-1", "EU (Frankfurt)"},
+            {"eu-west-1", "EU (Ireland)"},
+            {"eu-west-2", "EU (London)"},
+            {"sa-east-1", "South America (São Paulo)"}
+        })
+{
+}
 
 void AmazonS3::initialize(InitData&& init_data) {
   {

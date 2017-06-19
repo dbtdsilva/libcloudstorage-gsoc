@@ -27,6 +27,7 @@
 #include "CloudProvider.h"
 
 #include "Utility/Item.h"
+#include <map>
 
 namespace cloudstorage {
 
@@ -101,6 +102,7 @@ class AmazonS3 : public CloudProvider {
   };
 
  private:
+  const std::map<std::string, std::string> regions_list_;
   std::string getUrl(const Item&) const;
 
   std::string access_id_;
