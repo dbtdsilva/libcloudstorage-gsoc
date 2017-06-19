@@ -236,4 +236,57 @@ IAuth::Token::Pointer OwnCloud::Auth::refreshTokenResponse(
   return nullptr;
 }
 
+std::string OwnCloud::Auth::get_login_page() const {
+    return \
+    "<script>"
+    "function submitData(){"
+        "window.location.href = \"" + redirect_uri_prefix() + "?code=\""
+        " + encodeURIComponent($('#inputUsername').val() + '@' "
+        " + $('#inputHost').val() + '" + std::string(SEPARATOR) + \
+        "' + $('#inputPassword').val()) + \"&accepted=true\";"
+        "return false;};"
+    "</script>"
+    "<h2 class=\"text-center\">OwnCloud Login</h2>"
+    "<h5>Libcloudstorage requires to access your OwnCloud account in order to "
+        "display the content of your could. This page is running locally and "
+        "hosted by your machine. The inserted is going to be safely sent to "
+        "<a href=\"https://owncloud.org/\">OwnCloud</a> server.</h5><br/>"
+    "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">"
+    "<div class=\"form-group\">"
+    "<label for=\"inputUsername\" "
+        "class=\"col-sm-2 control-label\">Username</label>"
+    "<div class=\"col-sm-10\">"
+    "<input type=\"text\" "
+        "class=\"form-control\" id=\"inputUsername\" placeholder=\"Username\">"
+    "</div></div>"
+    "<div class=\"form-group\">"
+    "<label for=\"inputHost\" "
+        "class=\"col-sm-2 control-label\">Host</label>"
+    "<div class=\"col-sm-10\">"
+    "<input type=\"text\" "
+        "class=\"form-control\" id=\"inputHost\" placeholder=\"Host\">"
+    "</div></div>"
+    "<div class=\"form-group\">"
+    "<label for=\"inputPassword\" "
+        "class=\"col-sm-2 control-label\">Password</label>"
+    "<div class=\"col-sm-10\">"
+    "<input type=\"password\" "
+        "class=\"form-control\" id=\"inputPassword\" placeholder=\"Password\">"
+    "</div></div>"
+    "<div class=\"form-group\"><div class=\"col-sm-offset-2 col-sm-10\">"
+    "<button type=\"submit\" id=\"submit\" "
+        "class=\"btn btn-default\">Sign in</button>"
+    "</div></form>";
+}
+
+std::string OwnCloud::Auth::get_success_page() const {
+    // This requires the libcloudstorage to open the window, otherwise,
+    // the browsers won't allow to close it.
+    // "auth:1 Scripts may close only the windows that were opened by it."
+    //return "<script>window.close()</script>";
+    return "<h2 class=\"text-center\">Your login has been sent to "
+            "<a href=\"https://owncloud.org/\">OwnCloud</a> host "
+            "successfully</h2>";
+}
+
 }  // namespace cloudstorage
