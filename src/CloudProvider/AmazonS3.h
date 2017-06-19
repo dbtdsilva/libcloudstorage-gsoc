@@ -27,7 +27,6 @@
 #include "CloudProvider.h"
 
 #include "Utility/Item.h"
-#include <map>
 
 namespace cloudstorage {
 

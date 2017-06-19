@@ -26,8 +26,8 @@
 #include <tinyxml2.h>
 #include <algorithm>
 #include <iomanip>
+#include <map>
 
-const std::string DEFAULT_REGION = "eu-west-2";
 const std::map<std::string, std::string> regions_list_ = {
     {"us-east-2", "US East (Ohio)"},
     {"us-east-1", "US East (N. Virginia)"},
