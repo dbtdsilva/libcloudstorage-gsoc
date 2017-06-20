@@ -85,6 +85,9 @@ class IAuth {
   virtual std::string redirect_uri_prefix() const = 0;
   virtual void set_redirect_uri_prefix(const std::string&) = 0;
 
+  virtual std::string requesting_app_name() const = 0;
+  virtual void set_requesting_app_name(const std::string&) = 0;
+
   virtual Token* access_token() const = 0;
   virtual void set_access_token(Token::Pointer) = 0;
 

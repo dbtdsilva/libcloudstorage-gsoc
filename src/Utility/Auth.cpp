@@ -32,6 +32,7 @@
 
 const uint16_t DEFAULT_REDIRECT_URI_PORT = 8080;
 const std::string DEFAULT_REDIRECT_URI_PREFIX = "/auth";
+const std::string DEFAULT_REQUESTING_APP_NAME = "Libcloudstorage";
 
 const std::string HEAD = \
     "<head><meta name=\"Author\" content=\"VideoLAN\" />"
@@ -49,15 +50,15 @@ const std::string HEAD = \
         "href=\"//images.videolan.org/style/style.min.css\" />"
     "</head>";
 
-const std::string NAVBAR = \
+const auto NAVBAR_FUNCT = [](const std::string& app_name) { return \
     "<nav id=\"nav\" class=\"navbar navbar-default navbar-static-top\">"
     "<div class=\"container\">"
     "<div class=\"navbar-header\">"
     "<a class=\"navbar-brand\" href=\"//www.videolan.org/\">"
     "<img src='//images.videolan.org/images/logoBlue.png' "
         "alt='VideoLAN association' />"
-    "</a><a class=\"navbar-brand\" style=\"padding: 15px 15px\">"
-        "Libcloudstorage Local Server</a>"
+    "</a><a class=\"navbar-brand\" style=\"padding: 15px 15px\">" + \
+        app_name + " Local Server</a>"
     "<button type=\"button\" class=\"navbar-toggle collapsed\" "
         "data-toggle=\"collapse\" data-target=\"#main-navbar\" "
         "aria-expanded=\"false\">"
@@ -68,7 +69,7 @@ const std::string NAVBAR = \
     "</button>"
     "</div>"
     "</div>"
-    "</nav>";
+    "</nav>"; };
 
 namespace cloudstorage {
 namespace {
@@ -89,9 +90,11 @@ std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
     return stream.str();
 }
 
-std::string get_page(const std::string& body_content) {
+std::string get_page(const std::string& body_content,
+        const std::string& app_name) {
+    std::string navbar = NAVBAR_FUNCT(app_name);
     std::string page = "<html>" + HEAD + "<body class=\"new-design\">";
-    page += "<div id='bodyInner' class='blue' style='padding:0'>" + NAVBAR + \
+    page += "<div id='bodyInner' class='blue' style='padding:0'>" + navbar + \
         "<div class=\"container center-block\">";
     page += body_content;
     page += "</div></div></body></html>";
@@ -109,7 +112,7 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
 
     if (url == auth->redirect_uri_prefix() + "/login") {
         // Requesting the login page
-        page = get_page(auth->get_login_page());
+        page = auth->get_login_page();
     } else if (url == auth->redirect_uri_prefix()) {
         // Submitting an authentication request
         std::string code = auth->httpd()->
@@ -122,15 +125,13 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         if (!code.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "true";
-            page = get_page(auth->get_success_page() +
-                    sendHttpRequestFromJavaScript(json));
+            page = auth->get_success_page() + sendHttpRequestFromJavaScript(json);
         } else if (!error.empty()) {
             Json::Value json;
             json["data"]["accepted"] = "false";
-            page = get_page(auth->get_error_page() +
-                    sendHttpRequestFromJavaScript(json));
+            page = auth->get_error_page() + sendHttpRequestFromJavaScript(json);
         } else {
-            page = get_page(auth->get_error_page("Bad request"));
+            page = auth->get_error_page("Bad request");
         }
 
         if (!accepted.empty()) {
@@ -143,17 +144,18 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         }
     } else {
         // Requested a non-existing page
-        page = get_page(auth->get_error_page("Page not found"));
+        page = auth->get_error_page("Page not found");
     }
 
     fprintf(stderr, "\n\nPage: %s\n\n", page.c_str());
-    return page;
+    return get_page(page, auth->requesting_app_name());
 }
 
 }  // namespace
 
 Auth::Auth() : redirect_uri_port_(DEFAULT_REDIRECT_URI_PORT), http_(), httpd_(),
-        redirect_uri_prefix_(DEFAULT_REDIRECT_URI_PREFIX) {}
+        redirect_uri_prefix_(DEFAULT_REDIRECT_URI_PREFIX),
+        requesting_app_name_(DEFAULT_REQUESTING_APP_NAME) {}
 
 void Auth::initialize(IHttp* http, IHttpd* httpd) { http_ = http; httpd_ = httpd; }
 
@@ -233,6 +235,12 @@ std::string Auth::redirect_uri_prefix() const { return redirect_uri_prefix_; }
 
 void Auth::set_redirect_uri_prefix(const std::string& prefix) {
     redirect_uri_prefix_ = prefix;
+}
+
+std::string Auth::requesting_app_name() const { return requesting_app_name_; }
+
+void Auth::set_requesting_app_name(const std::string& app_name) {
+    requesting_app_name_ = app_name;
 }
 
 Auth::Token* Auth::access_token() const { return access_token_.get(); }

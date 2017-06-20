@@ -53,9 +53,12 @@ class Auth : public IAuth {
 
   uint16_t redirect_uri_port() const override;
   void set_redirect_uri_port(uint16_t) override;
-  
+
   std::string redirect_uri_prefix() const override;
   void set_redirect_uri_prefix(const std::string&) override;
+
+  std::string requesting_app_name() const override;
+  void set_requesting_app_name(const std::string&) override;
 
   Token* access_token() const override;
   void set_access_token(Token::Pointer) override;
@@ -75,6 +78,7 @@ class Auth : public IAuth {
   Token::Pointer fromTokenString(const std::string&) const override;
 
  private:
+  std::string requesting_app_name_;
   std::string authorization_code_;
   std::string client_id_;
   std::string client_secret_;

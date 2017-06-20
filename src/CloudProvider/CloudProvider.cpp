@@ -171,6 +171,8 @@ void CloudProvider::initialize(InitData&& data) {
                   auth()->set_redirect_uri_port(std::atoi(v.c_str())); });
   setWithHint(data.hints_, "redirect_uri_prefix", [this](std::string v) {
                   auth()->set_redirect_uri_prefix(v); });
+  setWithHint(data.hints_, "requesting_app_name", [this](std::string v) {
+                  auth()->set_requesting_app_name(v); });
 
 #ifdef WITH_CRYPTOPP
   if (!crypto_) crypto_ = util::make_unique<CryptoPP>();
