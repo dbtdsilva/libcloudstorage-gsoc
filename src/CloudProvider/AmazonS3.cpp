@@ -562,10 +562,10 @@ std::string AmazonS3::Auth::get_login_page() const {
         "return false;};"
     "</script>"
     "<h2 class=\"text-center\">Amazon S3 Login</h2>"
-    "<h5>" + requesting_app_name() + " requires to access your Amazon S3 "
+    "<h5>" + requesting_app_name() + " requires access to your Amazon S3 "
         "account in order to display the content of your cloud storage.<br/>"
-        "Amazon S3 requires to generate an access and a secret token in order "
-        "to be used in external applications. To generate those tokens go to "
+        "Amazon S3 requires generating an access and a secret token in order "
+        "to be used in external applications. To generate those tokens, go to "
         "\"My security credentials\", then \"Access Keys\" and create them."
         "</h5><br/>"
     "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">";
@@ -604,8 +604,9 @@ std::string AmazonS3::Auth::get_login_page() const {
         "class=\"btn btn-default\">Sign in</button>"
     "</div></form>"
     "<br/><br/><h5>This page is running locally and "
-        "hosted by your machine. The inserted is going to be safely sent to "
-        "<a href=\"https://aws.amazon.com/s3/\">Amazon S3</a> servers.</h5>";
+        "is hosted by your machine. The inserted data is going to be safely "
+        "sent to <a href=\"https://aws.amazon.com/s3/\">Amazon S3</a> "
+        "servers.</h5>";
 
     
     return page;
