@@ -566,7 +566,7 @@ std::string AmazonS3::Auth::get_login_page() const {
         "account in order to display the content of your cloud storage.<br/>"
         "Amazon S3 requires to generate an access and a secret token in order "
         "to be used in external applications. To generate those tokens go to "
-        "\"My security credentials \", then \"Access Keys\" and create them."
+        "\"My security credentials\", then \"Access Keys\" and create them."
         "</h5><br/>"
     "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">";
 
