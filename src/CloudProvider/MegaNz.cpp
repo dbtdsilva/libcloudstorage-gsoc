@@ -617,7 +617,7 @@ std::string MegaNz::Auth::get_login_page() const {
         "window.location.href = \"" + redirect_uri_prefix() + "?code=\""
         " + encodeURIComponent($('#inputEmail').val() + '" \
         + std::string(SEPARATOR) + \
-        "' + $('#inputPassword').val()) + \"&accepted=true\";"
+        "' + $('#inputPassword').val());"
         "return false;};"
     "</script>"
     "<h2 class=\"text-center\">Mega.Nz Login</h2>"

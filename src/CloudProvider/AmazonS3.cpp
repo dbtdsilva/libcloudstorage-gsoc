@@ -558,7 +558,7 @@ std::string AmazonS3::Auth::get_login_page() const {
         " + encodeURIComponent($('#inputAccessKey').val() + '@'"
         " + $('#inputRegion').val() + '" \
         + std::string(SEPARATOR) + \
-        "' + $('#inputSecretKey').val()) + \"&accepted=true\";"
+        "' + $('#inputSecretKey').val());"
         "return false;};"
     "</script>"
     "<h2 class=\"text-center\">Amazon S3 Login</h2>"
