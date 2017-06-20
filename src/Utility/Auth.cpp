@@ -146,8 +146,6 @@ std::string requestCallback(IHttpd::RequestData * rdata) {
         // Requested a non-existing page
         page = auth->get_error_page("Page not found");
     }
-
-    fprintf(stderr, "\n\nPage: %s\n\n", page.c_str());
     return get_page(page, auth->requesting_app_name());
 }
 

@@ -562,11 +562,12 @@ std::string AmazonS3::Auth::get_login_page() const {
         "return false;};"
     "</script>"
     "<h2 class=\"text-center\">Amazon S3 Login</h2>"
-    "<h5>Libcloudstorage requires to access your Amazon S3 account in order to "
-        "display the content of your cloud storage.<br/>Amazon S3 requires to "
-        "generate an access and a secret token in order to be used in external "
-        "applications. To generate those tokens go to \"My security credentials"
-        "\", then \"Access Keys\" and create them.</h5><br/>"
+    "<h5>" + requesting_app_name() + " requires to access your Amazon S3 "
+        "account in order to display the content of your cloud storage.<br/>"
+        "Amazon S3 requires to generate an access and a secret token in order "
+        "to be used in external applications. To generate those tokens go to "
+        "\"My security credentials \", then \"Access Keys\" and create them."
+        "</h5><br/>"
     "<form class=\"form-horizontal\" onsubmit=\"return submitData()\">";
 
     // Regions
