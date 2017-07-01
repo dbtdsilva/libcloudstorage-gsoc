@@ -35,6 +35,13 @@ template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+class Url {
+public:
+    static std::string unescape(const std::string&);
+    static std::string escape(const std::string&);
+    static std::string escapeHeader(const std::string&);
+};
 }  // namespace util
 
 class Semaphore {
