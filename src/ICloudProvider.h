@@ -163,8 +163,8 @@ class ICloudProvider {
    * @param token token used to be serialized
    * @return serialized session with json compact
    */
-  static std::string serializeSession(const std::string& token,
-                                      const Hints& hints);
+  static std::string storeSession(const std::string& token,
+                                  const Hints& hints);
 
   /**
    * Serializes token and hints in a compact json that are useful to be
@@ -176,8 +176,8 @@ class ICloudProvider {
    * @param token pointer to the token unserialized
    * @return returns false if fails to unserialized
    */
-  static bool unserializeSession(const std::string& serialized_data,
-                                 std::string& token, Hints& hints);
+  static bool restoreSession(const std::string& serialized_data,
+                             std::string& token, Hints& hints);
   
   /**
    * Token which should be saved and reused as a parameter to

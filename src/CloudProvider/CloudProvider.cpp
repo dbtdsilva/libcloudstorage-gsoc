@@ -195,7 +195,7 @@ void CloudProvider::initialize(InitData&& data) {
   auth()->initialize(http(), httpd());
 }
 
-std::string ICloudProvider::serializeSession(const std::string& token,
+std::string ICloudProvider::storeSession(const std::string& token,
                                              const Hints& hints) {
   Json::Value root_json;
   Json::Value hints_json;
@@ -210,7 +210,7 @@ std::string ICloudProvider::serializeSession(const std::string& token,
   return fastWriter.write(root_json);
 }
 
-bool ICloudProvider::unserializeSession(const std::string& serialized_data,
+bool ICloudProvider::restoreSession(const std::string& serialized_data,
                                         std::string& token, Hints& hints) {
   std::string token_tmp;
   Hints hints_tmp;
