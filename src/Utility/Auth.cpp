@@ -78,7 +78,9 @@ namespace {
 
 std::string sendHttpRequestFromJavaScript(const Json::Value& json) {
   std::stringstream stream;
-  stream << "<script>$.ajax(" << json << ")</script>";
+  Json::FastWriter fastWriter;
+  fastWriter.omitEndingLineFeed();
+  stream << "<script>$.ajax(" << fastWriter.write(json) << ")</script>";
   return stream.str();
 }
 
