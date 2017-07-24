@@ -25,6 +25,9 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
+#include <sstream>
+#include <json/json.h>
 
 namespace cloudstorage {
 
@@ -51,6 +54,47 @@ range parse_range(const std::string& r) {
   return {begin, end == -1 ? -1 : (end - begin + 1)};
 }
 
-}  // namespace util
+std::string Url::unescape(const std::string& value) {
+    std::ostringstream unescaped;
+    int hex_extract;
+    for (int i = 0; i < value.length(); i++) {
+        if (value[i] == '%') {
+            // Failed to unescape (there is not enough digits with the %
+            if (i >= value.length() - 2)
+                return "";
+            sscanf(value.substr(i + 1, 2).c_str(), "%x", &hex_extract);
+            unescaped << hex_extract;
+            i += 2; // Skip the two elements that were read
+        } else {
+            unescaped << value[i];
+        }
+    }
 
-}  // namespace cloudstorage
+    return unescaped.str();
+}
+
+std::string Url::escape(const std::string& value) {
+    std::ostringstream escaped;
+
+    escaped << std::setfill('0');
+    escaped << std::hex;
+
+    for (std::string::const_iterator i = value.begin(); i != value.end(); i++) {
+        std::string::value_type c = *i;
+        if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+        escaped << std::uppercase;
+        escaped << '%' << std::setw(2) << int((unsigned char) c);
+        escaped << std::nouppercase;
+    }
+
+    return escaped.str();
+}
+
+std::string Url::escapeHeader(const std::string& header) {
+    return Json::valueToQuotedString(header.c_str());
+}
+} // namespace util
+} // namespace cloudstorage

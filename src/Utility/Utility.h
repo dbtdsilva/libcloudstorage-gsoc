@@ -44,6 +44,12 @@ struct range {
 std::string remove_whitespace(const std::string& str);
 range parse_range(const std::string& str);
 
+class Url {
+public:
+    static std::string unescape(const std::string&);
+    static std::string escape(const std::string&);
+    static std::string escapeHeader(const std::string&);
+};
 }  // namespace util
 
 class Semaphore {
