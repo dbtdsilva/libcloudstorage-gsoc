@@ -36,7 +36,7 @@ int httpRequestCallback(void* cls, MHD_Connection* c, const char* url,
   MicroHttpdServer* server = static_cast<MicroHttpdServer*>(cls);
   MicroHttpdServer::Connection connection(c, url);
   auto response = server->callback()->receivedConnection(*server, connection);
-  MicroHttpdServer::Response* micro_response_ptr =
+  auto micro_response_ptr =
     static_cast<MicroHttpdServer::Response*>(response.get());
 
   micro_response_ptr->send(connection);
