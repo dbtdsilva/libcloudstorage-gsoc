@@ -42,7 +42,7 @@ class MicroHttpdServer : public IHttpServer {
     Response(int code, const IResponse::Headers&, const std::string& body);
     ~Response();
 
-    void send(const IConnection&) override;
+    void send(const IConnection&);
     int result() const { return result_; }
 
    protected:

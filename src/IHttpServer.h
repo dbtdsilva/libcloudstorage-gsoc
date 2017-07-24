@@ -54,8 +54,6 @@ class IHttpServer {
     };
 
     virtual ~IResponse() = default;
-
-    virtual void send(const IConnection&) = 0;
   };
 
   class IConnection {

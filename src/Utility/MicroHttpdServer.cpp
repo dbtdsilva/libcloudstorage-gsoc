@@ -36,9 +36,11 @@ int httpRequestCallback(void* cls, MHD_Connection* c, const char* url,
   MicroHttpdServer* server = static_cast<MicroHttpdServer*>(cls);
   MicroHttpdServer::Connection connection(c, url);
   auto response = server->callback()->receivedConnection(*server, connection);
-  response->send(connection);
-  return static_cast<const MicroHttpdServer::Response*>(response.get())
-      ->result();
+  MicroHttpdServer::Response* micro_response_ptr =
+    static_cast<MicroHttpdServer::Response*>(response.get());
+
+  micro_response_ptr->send(connection);
+  return micro_response_ptr->result();
 }
 
 }  // namespace
