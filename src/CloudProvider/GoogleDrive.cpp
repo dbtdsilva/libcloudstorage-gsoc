@@ -201,9 +201,9 @@ IItem::Pointer GoogleDrive::toItem(const Json::Value& v) const {
 
 GoogleDrive::Auth::Auth() {
   set_client_id(
-      "646432077068-hmvk44qgo6d0a64a5h9ieue34p3j2dcv.apps.googleusercontent."
+      "521438174146-e1cikedqpslrjrphd3quoa5ot9mq9k44.apps.googleusercontent."
       "com");
-  set_client_secret("1f0FG5ch-kKOanTAv1Bqdp9U");
+  set_client_secret("v5wull_LhE3_yJoqh5fgaa7a");
 }
 
 std::string GoogleDrive::Auth::authorizeLibraryUrl() const {

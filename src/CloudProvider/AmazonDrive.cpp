@@ -291,6 +291,11 @@ bool AmazonDrive::reauthorize(int code) const {
 }
 
 AmazonDrive::Auth::Auth() {
+  // The only port with whitelist for this client is 12345 and the applications
+  // for accessing Amazon Drive API are closed. So there is no chance to change
+  // the redirect port to 8080 until they allow new devs.
+  // https://developer.amazon.com/amazon-drive "The Amazon Drive API and SDKs
+  // are currently closed to new developers."
   set_client_id(
       "amzn1.application-oa2-client.04f642253f4e43668e5b1441ecf263f0");
   set_client_secret(

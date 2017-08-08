@@ -437,7 +437,7 @@ void MegaNz::initialize(InitData&& data) {
     });
     if (!mega_)
       mega_ =
-          util::make_unique<MegaApi>("ZVhB0Czb", temporary_directory_.c_str());
+          util::make_unique<MegaApi>("4T4khZxJ", temporary_directory_.c_str());
     if (file_url_.empty()) file_url_ = DEFAULT_FILE_URL;
   }
   CloudProvider::initialize(std::move(data));

@@ -246,8 +246,8 @@ IItem::Pointer Box::toItem(const Json::Value& v) const {
 }
 
 Box::Auth::Auth() {
-  set_client_id("zmiv9tv13hunxhyjk16zqv8dmdw0d773");
-  set_client_secret("IZ0T8WsUpJin7Qt3rHMf7qDAIFAkYZ0R");
+  set_client_id("qpqa8g2awvddppocjp2klh4o4y288c89");
+  set_client_secret("8JPLHtPsO5PL4PIEsVFKbn8XzgKt2Bjk");
 }
 
 std::string Box::Auth::authorizeLibraryUrl() const {

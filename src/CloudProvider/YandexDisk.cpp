@@ -350,8 +350,8 @@ void YandexDisk::authorizeRequest(IHttpRequest& request) const {
 }
 
 YandexDisk::Auth::Auth() {
-  set_client_id("04d700d432884c4381c07e760213ed8a");
-  set_client_secret("197f9693caa64f0ebb51d201110074f9");
+  set_client_id("e2a57a217113406999d521fc2234dbcb");
+  set_client_secret("7090e0844c634e9baff3735fd6e199de");
 }
 
 std::string YandexDisk::Auth::authorizeLibraryUrl() const {
