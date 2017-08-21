@@ -46,7 +46,6 @@ AuthorizeRequest::AuthorizeRequest(std::shared_ptr<CloudProvider> p,
         }
         lock.lock();
       }
-      provider()->current_authorization_ = nullptr;
       lock.unlock();
       provider()->auth_callback()->done(*provider(), result);
       request->done(result);
