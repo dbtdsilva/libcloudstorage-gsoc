@@ -171,6 +171,7 @@ class IHttp {
  public:
   using Pointer = std::unique_ptr<IHttp>;
 
+  virtual ~IHttp() = default;
   /**
    * Creates http request object.
    *
